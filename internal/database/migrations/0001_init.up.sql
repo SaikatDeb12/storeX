@@ -109,21 +109,21 @@ CREATE TABLE laptop (
 
 CREATE TABLE keyboard (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    asset_id     UUID REFERENCES assets(id),
-    layout       TEXT,
-    connectivity connection_type
+    asset_id     UUID UNIQUE REFERENCES assets(id),
+    layout       TEXT 
+    connectivity connection_type NOT NULL
 );
 
 CREATE TABLE mouse (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    asset_id     UUID REFERENCES assets(id),
+    asset_id     UUID UNIQUE REFERENCES assets(id),
     dpi          INT,
-    connectivity connection_type
+    connectivity connection_type NOT NULL
 );
 
 CREATE TABLE mobile (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    asset_id         UUID REFERENCES assets(id),
+    asset_id         UUID UNIQUE REFERENCES assets(id),
     os               TEXT NOT NULL,
     ram              TEXT NOT NULL,
     storage          TEXT NOT NULL,
