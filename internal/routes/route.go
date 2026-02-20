@@ -1,1 +1,25 @@
 package routes
+
+import (
+	"net/http"
+
+	handler "github.com/SaikatDeb12/storeX/internal/handlers"
+	"github.com/SaikatDeb12/storeX/internal/utils"
+	"github.com/go-chi/chi/v5"
+)
+
+func SetUpRouter() *chi.Mux {
+	router := chi.NewRouter()
+
+	router.Route("/v1", func(v1 chi.Router) {
+		v1.Get("health", func(w http.ResponseWriter, r *http.Request) {
+			utils.RespondJSON(w, http.StatusOK, map[string]string{
+				"status": "server is running",
+			})
+		})
+		v1.Post("auth/login", handler.Login)
+		v1.Post("auth/register", handler.Register)
+	})
+
+	return router
+}
