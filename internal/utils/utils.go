@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func ParseJSON(body io.Reader, out interface{}) error {
+func GetEnvVariables(key string) string {
+	return os.Getenv(key)
+}
+
+func ParseBody(body io.Reader, out interface{}) error {
 	return json.NewDecoder(body).Decode(out)
 }
 
-func EncodeJSON(w http.ResponseWriter, out interface{}) error {
+func EncodeBody(w http.ResponseWriter, out interface{}) error {
 	return json.NewEncoder(w).Encode(out)
 }
 
@@ -40,7 +45,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error, message stri
 		StatusCode: statusCode,
 	}
 
-	if err := EncodeJSON(w, NewError); err != nil {
+	if err := EncodeBody(w, NewError); err != nil {
 		fmt.Printf("error: %+v", err)
 	}
 }
@@ -48,7 +53,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error, message stri
 func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	w.WriteHeader(statusCode)
 	if body != nil {
-		err := EncodeJSON(w, body)
+		err := EncodeBody(w, body)
 		if err != nil {
 			fmt.Printf("%+v\n", err)
 		}
