@@ -8,8 +8,14 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
+)
+
+var (
+	SecretKey = "SECRET"
+	validate  = validator.New()
 )
 
 func GetEnvVariables(key string) string {
@@ -24,7 +30,9 @@ func EncodeBody(w http.ResponseWriter, out interface{}) error {
 	return json.NewEncoder(w).Encode(out)
 }
 
-const SecretKey = "SECRET"
+func ValidateStruct(payload interface{}) error {
+	return validate.Struct(payload)
+}
 
 type ErrorModel struct {
 	Error      string
