@@ -12,3 +12,17 @@ func CheckUserExistsByEmail(email string) error {
 	err := database.DB.Get(SQL, email)
 	return err
 }
+
+func CreateUser(name, email, phoneNumber, userRole, userType, hashedPassword string) (string, error) {
+	SQL := `
+		INSERT INTO users(name, email, phone_number, role, type, password)
+		VALUES($1, $2, $3, $4, $5, $6, $7 )
+		RETURNING id
+	`
+	var userID string
+	err := database.DB.Get(&userID, SQL, name, email, phoneNumber, userRole, userType, hashedPassword)
+	if err != nil {
+		return "", err
+	}
+	return string(userID), nil
+}

@@ -20,9 +20,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := dbhelper.CheckUserExistsByEmail(req.Email)
-	if err != nil {
+	if err := dbhelper.CheckUserExistsByEmail(req.Email); err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "user already exists")
+		return
+	}
+
+	hashedPassword, err := utils.HashedPassword(req.Password)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "password hashing failed")
 		return
 	}
 }
