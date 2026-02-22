@@ -1,6 +1,9 @@
 package dbhelper
 
-import "github.com/SaikatDeb12/storeX/internal/database"
+import (
+	"github.com/SaikatDeb12/storeX/internal/database"
+	"github.com/SaikatDeb12/storeX/internal/models"
+)
 
 func CheckUserExistsByEmail(email string) error {
 	SQL := `
@@ -25,4 +28,32 @@ func CreateUser(name, email, phoneNumber, userRole, userType, hashedPassword str
 		return "", err
 	}
 	return string(userID), nil
+}
+
+func CreateSession(userID string) (string, error) {
+	SQL := `
+		INSERT INTO session(user_id)
+		VALUES($1)
+		RETURNING id
+	`
+	var sessionID string
+	err := database.DB.Get(&sessionID, SQL)
+	if err != nil {
+		return "", err
+	}
+	return string(sessionID), nil
+}
+
+func GetUserAuthByEmail(email string) (models.User, error) {
+	SQL := `
+		SELECT id, email, password, archived_at 
+		FROM users 
+		WHERE email=TRIM(LOWER($1)) AND archived_at IS NULL
+	`
+	var user models.User
+	err := database.DB.Get(user, SQL)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
 }
