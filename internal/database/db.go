@@ -45,7 +45,8 @@ func Connect() error {
 	db_port := utils.GetEnvVariables("DB_PORT")
 
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s ", db_host, db_port, db_user, db_password, db_name, sslmode)
-	DB, err := sqlx.Connect("postgres", connStr)
+	var err error
+	DB, err = sqlx.Connect("postgres", connStr)
 	if err != nil {
 		return err
 	}

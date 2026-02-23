@@ -20,8 +20,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := dbhelper.CheckUserExistsByEmail(req.Email); err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "user already exists")
+	isEmailExists, err := dbhelper.CheckUserExistsByEmail(req.Email)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "error while checking email exists or not")
+		return
+	}
+
+	if isEmailExists {
+		utils.RespondError(w, http.StatusUnauthorized, nil, "user already exists")
 		return
 	}
 

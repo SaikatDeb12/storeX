@@ -5,21 +5,25 @@ import (
 	"github.com/SaikatDeb12/storeX/internal/models"
 )
 
-func CheckUserExistsByEmail(email string) error {
+func CheckUserExistsByEmail(email string) (bool, error) {
 	SQL := `
 		SELECT COUNT(*)
 		FROM users
 		WHERE email=TRIM(LOWER($1)) AND archived_at IS NULL
 	`
+	var count int
+	err := database.DB.Get(&count, SQL, email)
+	if err != nil {
+		return false, err
+	}
 
-	err := database.DB.Get(SQL, email)
-	return err
+	return count > 0, err
 }
 
 func CreateUser(name, email, phoneNumber, role, employment, hashedPassword string) (string, error) {
 	SQL := `
-		INSERT INTO users(name, email, phone_number, role, type, password)
-		VALUES($1, TRIM(LOWER($2)), $3, $4, $5, $6, $7 )
+		INSERT INTO users(name, email, phone_number, role, employment, password)
+		VALUES($1, TRIM(LOWER($2)), $3, $4, $5, $6)
 		RETURNING id
 	`
 	var userID string
@@ -32,12 +36,12 @@ func CreateUser(name, email, phoneNumber, role, employment, hashedPassword strin
 
 func CreateSession(userID string) (string, error) {
 	SQL := `
-		INSERT INTO session(user_id)
+		INSERT INTO user_sessions(user_id)
 		VALUES($1)
 		RETURNING id
 	`
 	var sessionID string
-	err := database.DB.Get(&sessionID, SQL)
+	err := database.DB.Get(&sessionID, SQL, userID)
 	if err != nil {
 		return "", err
 	}
@@ -51,7 +55,7 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 		WHERE email=TRIM(LOWER($1)) AND archived_at IS NULL
 	`
 	var user models.User
-	err := database.DB.Get(user, SQL)
+	err := database.DB.Get(&user, SQL, email)
 	if err != nil {
 		return user, err
 	}
