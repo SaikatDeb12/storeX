@@ -31,7 +31,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := dbhelper.CreateUser(req.Name, req.Email, req.PhoneNumber, req.UserRole, req.UserType, hashedPassword)
+	userID, err := dbhelper.CreateUser(req.Name, req.Email, req.PhoneNumber, req.Role, req.Employment, hashedPassword)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to create user")
 		return

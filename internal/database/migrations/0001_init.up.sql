@@ -42,15 +42,14 @@ CREATE TYPE connection_type AS ENUM (
     'wireless'
 );
 
-
 CREATE TABLE users (
     id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name          TEXT NOT NULL,
     email         TEXT NOT NULL,
-    role          user_role DEFAULT 'employee',
-    employment    employment_type NOT NULL,
     phone_number  TEXT NOT NULL,
     password      TEXT NOT NULL,
+    role          user_role DEFAULT 'employee',
+    employment    employment_type NOT NULL,
     created_at    TIMESTAMPTZ DEFAULT now(),
     archived_at   TIMESTAMPTZ
 );
@@ -65,22 +64,17 @@ CREATE TABLE assets (
     brand           TEXT NOT NULL,
     model           TEXT NOT NULL,
     serial_no       TEXT UNIQUE NOT NULL,
-
     asset_type      asset_type NOT NULL,
     status          asset_status DEFAULT 'available',
     owner_type      asset_owner_type NOT NULL,
-
     assigned_by_id  UUID REFERENCES users(id),
     assigned_to_id  UUID REFERENCES users(id),
     assigned_at     TIMESTAMPTZ,
-
     warranty_start  TIMESTAMPTZ NOT NULL,
     warranty_end    TIMESTAMPTZ NOT NULL,
-
     service_start   TIMESTAMPTZ,
     service_end     TIMESTAMPTZ,
     returned_at     TIMESTAMPTZ,
-
     created_at      TIMESTAMPTZ DEFAULT now(),
     updated_at      TIMESTAMPTZ,
     archived_at     TIMESTAMPTZ,
@@ -98,14 +92,14 @@ CREATE TABLE user_sessions (
 );
 
 CREATE TABLE laptops (
-    id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    asset_id         UUID UNIQUE NOT NULL REFERENCES assets(id),
-    processor        TEXT,
-    ram              TEXT,
-    storage          TEXT,
-    os               TEXT,
-    charger          TEXT,
-    device_password  TEXT NOT NULL
+    id                 UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    asset_id           UUID UNIQUE NOT NULL REFERENCES assets(id),
+    processor          TEXT NOT NULL,
+    ram                TEXT NOT NULL,
+    storage            TEXT NOT NULL,
+    operating_system   TEXT NOT NULL,
+    charger            TEXT,
+    device_password    TEXT NOT NULL
 );
 
 CREATE TABLE keyboards (
@@ -115,7 +109,7 @@ CREATE TABLE keyboards (
     connectivity connection_type NOT NULL
 );
 
-CREATE TABLE mouse (
+CREATE TABLE mice (
     id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     asset_id     UUID UNIQUE NOT NULL REFERENCES assets(id),
     dpi          INT,
@@ -125,7 +119,7 @@ CREATE TABLE mouse (
 CREATE TABLE mobiles (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     asset_id         UUID UNIQUE NOT NULL REFERENCES assets(id),
-    os               TEXT NOT NULL,
+    operating_system TEXT NOT NULL,
     ram              TEXT NOT NULL,
     storage          TEXT NOT NULL,
     charger          TEXT,
