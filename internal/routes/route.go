@@ -19,6 +19,12 @@ func SetUpRouter() *chi.Mux {
 		})
 		v1.Post("/auth/login", handler.Login)
 		v1.Post("/auth/register", handler.Register)
+		v1.Group(func(r chi.Router) {
+			r.Use(middleware)
+			r.Route("/users", func(r chi.Router) {
+				r.Get("/", handler.GetAllUsers)
+			})
+		})
 	})
 
 	return router

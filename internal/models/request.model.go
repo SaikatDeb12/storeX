@@ -13,3 +13,8 @@ type LoginRequest struct {
 	Email    string `json:"email" db:"email" validate:"required,email"`
 	Password string `json:"password" db:"password" validate:"required,min=8,max=20"`
 }
+
+type RequestContext struct {
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
+}
