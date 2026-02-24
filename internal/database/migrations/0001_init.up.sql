@@ -32,9 +32,8 @@ CREATE TYPE employment_type AS ENUM (
 );
 
 CREATE TYPE asset_owner_type AS ENUM (
-    'company',
     'client',
-    'remote_state'
+    'remotestate'
 );
 
 CREATE TYPE connection_type AS ENUM (

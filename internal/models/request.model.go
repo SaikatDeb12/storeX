@@ -20,11 +20,19 @@ type RequestContext struct {
 }
 
 type UserInfoRequest struct {
-	ID          string `json:"id" db:"id"`
-	Name        string `json:"name" db:"name" validate:"required,min=3,max=50"`
-	Email       string `json:"email" db:"email" validate:"required,email"`
-	PhoneNumber string `json:"phoneNumber" db:"phone_number" validate:"required,len=10"`
-	Role        string `json:"role" db:"role" validate:"required,oneof=admin employee project_manager asset_manager employee_manager"`
-	Employment  string `json:"employment" db:"employment" validate:"required,oneof=full_time intern freelancer"`
-	CreatedAt   string `json:"createdAt" db:"created_at"`
+	ID           string             `json:"id" db:"id"`
+	Name         string             `json:"name" db:"name" `
+	Email        string             `json:"email" db:"email"`
+	PhoneNumber  string             `json:"phoneNumber" db:"phone_number" `
+	Role         string             `json:"role" db:"role"`
+	Employment   string             `json:"employment" db:"employment" `
+	CreatedAt    string             `json:"createdAt" db:"created_at"`
+	AssetDetails []AssetInfoRequest `json:"assetDetails"`
+}
+
+type AssetInfoRequest struct {
+	ID    string `json:"id" db:"id"`
+	Brand string `json:"brand" db:"brand"`
+	Model string `json:"model" db:"model"`
+	Type  string `json:"assetType" db:"asset_type"`
 }

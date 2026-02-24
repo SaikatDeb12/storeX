@@ -1,8 +1,6 @@
 package dbhelper
 
 import (
-	"fmt"
-
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
 )
@@ -70,15 +68,16 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 // .
 // .
 // asset count, assignedStatus,
-// func GetAssetCount(userID string) (int, error) {
-// 	SQL := `
-// 		SELECT COUNT(*) FROM assets
-// 		WHERE assigned_to_id=$2
-// 	`
-// 	var count int
-// 	err := database.DB.Get(&count, SQL, userID)
-// 	return count, err
-// }
+func GetAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
+	SQL := `
+		SELECT id, brand, model, asset_type
+		FROM assets
+		WHERE assigned_to_id=$1
+	`
+	assetDetails := make([]models.AssetInfoRequest, 0)
+	err := database.DB.Select(&assetDetails, SQL, userID)
+	return assetDetails, err
+}
 
 func GetUserInfo() ([]models.UserInfoRequest, error) {
 	SQL := `
@@ -91,6 +90,24 @@ func GetUserInfo() ([]models.UserInfoRequest, error) {
 		return users, err
 	}
 
-	fmt.Println(users)
+	// other way:
+	for i := range users {
+		userDetails, err := GetAssetInfo(users[i].ID)
+		if err != nil {
+			return users, err
+		}
+
+		users[i].AssetDetails = userDetails
+	}
 	return users, err
+
+	// change in the copy not the original
+	// for _, user := range users {
+	// 	userDetails, err := GetAssetInfo(user.ID)
+	// 	if err != nil {
+	// 		return users, err
+	// 	}
+	// 	fmt.Println(userDetails)
+	// 	user.AssetDetails = userDetails
+	// }
 }
