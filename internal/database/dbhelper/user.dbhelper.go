@@ -68,34 +68,40 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 // .
 // .
 // asset count, assignedStatus,
-func GetAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
+func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
 	SQL := `
-		SELECT id, brand, model, asset_type
+		SELECT id, brand, model, status
 		FROM assets
-		WHERE assigned_to_id=$1
+		WHERE ($1='' OR assigned_to_id::TEXT=$1)
+		AND ($2 = '' OR status::TEXT=$2)
 	`
 	assetDetails := make([]models.AssetInfoRequest, 0)
-	err := database.DB.Select(&assetDetails, SQL, userID)
+	err := database.DB.Select(&assetDetails, SQL, userID, assetStatus)
 	return assetDetails, err
 }
 
-func GetUserInfo() ([]models.UserInfoRequest, error) {
+func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoRequest, error) {
 	SQL := `
 		SELECT id, name, email, phone_number, role, employment, created_at
 		FROM users
+		WHERE ($1 = '' OR name LIKE '%' || $1 || '%')
+		AND ($2 = '' OR role::TEXT=$2)
+		AND ($3 = '' OR employment::TEXT=$3)
 	`
 	users := make([]models.UserInfoRequest, 0)
-	err := database.DB.Select(&users, SQL)
+	err := database.DB.Select(&users, SQL, name, role, employment)
 	if err != nil {
 		return users, err
 	}
 
-	// other way:
+	// to make change on the original slice:
 	for i := range users {
-		userDetails, err := GetAssetInfo(users[i].ID)
+		userDetails, err := GetAssetInfo(users[i].ID, assetStatus)
 		if err != nil {
 			return users, err
 		}
+
+		// TODO: : if there's a user who's status is different than expected.. then delete that user record from the slice
 
 		users[i].AssetDetails = userDetails
 	}

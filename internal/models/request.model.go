@@ -31,8 +31,9 @@ type UserInfoRequest struct {
 }
 
 type AssetInfoRequest struct {
-	ID    string `json:"id" db:"id"`
-	Brand string `json:"brand" db:"brand"`
-	Model string `json:"model" db:"model"`
-	Type  string `json:"assetType" db:"asset_type"`
+	ID     string `json:"id" db:"id"`
+	Brand  string `json:"brand" db:"brand"`
+	Model  string `json:"model" db:"model"`
+	Status string `json:"status" db:"status"`
+	Type   string `json:"assetType" db:"asset_type"`
 }

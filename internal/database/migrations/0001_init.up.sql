@@ -48,7 +48,7 @@ CREATE TABLE users (
     phone_number  TEXT NOT NULL,
     password      TEXT NOT NULL,
     role          user_role DEFAULT 'employee',
-    employment    employment_type NOT NULL,
+    employment    employment_type DEFAULT 'full_time',
     created_at    TIMESTAMPTZ DEFAULT now(),
     archived_at   TIMESTAMPTZ
 );
@@ -64,7 +64,7 @@ CREATE TABLE assets (
     serial_no       TEXT UNIQUE NOT NULL,
     asset_type      asset_type NOT NULL,
     status          asset_status DEFAULT 'available',
-    owner_type      asset_owner_type NOT NULL,
+    owner_type      asset_owner_type DEFAULT 'remotestate',
     assigned_by_id  UUID REFERENCES users(id),
     assigned_to_id  UUID REFERENCES users(id),
     assigned_at     TIMESTAMPTZ,
