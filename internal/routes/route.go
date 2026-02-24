@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	handler "github.com/SaikatDeb12/storeX/internal/handlers"
+	"github.com/SaikatDeb12/storeX/internal/middleware"
 	"github.com/SaikatDeb12/storeX/internal/utils"
 	"github.com/go-chi/chi/v5"
 )
@@ -20,7 +21,7 @@ func SetUpRouter() *chi.Mux {
 		v1.Post("/auth/login", handler.Login)
 		v1.Post("/auth/register", handler.Register)
 		v1.Group(func(r chi.Router) {
-			r.Use(middleware)
+			r.Use(middleware.Authenticate)
 			r.Route("/users", func(r chi.Router) {
 				r.Get("/", handler.GetAllUsers)
 			})

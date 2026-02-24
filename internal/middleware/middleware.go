@@ -15,15 +15,20 @@ type ContextKeys struct{}
 
 var RequestContextKey = ContextKeys{}
 
+func UserContext(r *http.Request) (models.RequestContext, bool) {
+	user, ok := r.Context().Value(RequestContextKey).(models.RequestContext)
+	return user, ok
+}
+
 func Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("authorization")
+		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
 			utils.RespondError(w, http.StatusNotFound, nil, "missing authorization header")
 			return
 		}
 
-		const brearerPrefix = "bearer"
+		const brearerPrefix = "Bearer "
 		if !strings.HasPrefix(authHeader, brearerPrefix) {
 			utils.RespondError(w, http.StatusUnauthorized, nil, "invalid authorization header")
 			return

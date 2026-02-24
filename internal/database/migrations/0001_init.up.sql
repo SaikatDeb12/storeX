@@ -60,7 +60,6 @@ CREATE UNIQUE INDEX idx_users_email_active
 
 CREATE TABLE assets (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name            TEXT NOT NULL,
     brand           TEXT NOT NULL,
     model           TEXT NOT NULL,
     serial_no       TEXT UNIQUE NOT NULL,

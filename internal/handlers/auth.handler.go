@@ -49,9 +49,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token, err := utils.GenerateJWT(userID, sessionID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "error while generating token")
+		return
+	}
+
 	utils.RespondJSON(w, http.StatusCreated, map[string]string{
 		"message": "user register successfully",
-		"token":   sessionID,
+		"token":   token,
 	})
 }
 

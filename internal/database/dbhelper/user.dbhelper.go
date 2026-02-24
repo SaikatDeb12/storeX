@@ -1,6 +1,8 @@
 package dbhelper
 
 import (
+	"fmt"
+
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
 )
@@ -60,4 +62,35 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 		return user, err
 	}
 	return user, nil
+}
+
+// should show:
+// user details
+// .
+// .
+// .
+// asset count, assignedStatus,
+// func GetAssetCount(userID string) (int, error) {
+// 	SQL := `
+// 		SELECT COUNT(*) FROM assets
+// 		WHERE assigned_to_id=$2
+// 	`
+// 	var count int
+// 	err := database.DB.Get(&count, SQL, userID)
+// 	return count, err
+// }
+
+func GetUserInfo() ([]models.UserInfoRequest, error) {
+	SQL := `
+		SELECT id, name, email, phone_number, role, employment, created_at
+		FROM users
+	`
+	users := make([]models.UserInfoRequest, 0)
+	err := database.DB.Select(&users, SQL)
+	if err != nil {
+		return users, err
+	}
+
+	fmt.Println(users)
+	return users, err
 }

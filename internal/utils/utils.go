@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	SecretKey = []byte(GetEnvVariables("SECRET_KEY"))
+	SecretKey = GetEnvVariables("SECRET_KEY")
 	validate  = validator.New()
 )
 
