@@ -16,7 +16,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := utils.ValidateStruct(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "payload validation error")
+		utils.RespondError(w, http.StatusBadRequest, err, "payload validation failed")
 		return
 	}
 
@@ -49,7 +49,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(userID, sessionID)
+	role := req.Role
+	token, err := utils.GenerateJWT(userID, sessionID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "error while generating token")
 		return
@@ -91,7 +92,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := utils.GenerateJWT(userID, sessionID)
+	role := user.Role
+	token, err := utils.GenerateJWT(userID, sessionID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "error while generating token")
 		return

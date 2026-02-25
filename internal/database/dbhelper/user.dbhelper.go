@@ -62,12 +62,6 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-// should show:
-// user details
-// .
-// .
-// .
-// asset count, assignedStatus,
 func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
 	SQL := `
 		SELECT id, brand, model, status

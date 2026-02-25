@@ -80,10 +80,11 @@ func CheckPassword(hashedPassword, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 }
 
-func GenerateJWT(userID, sessionID string) (string, error) {
+func GenerateJWT(userID, sessionID, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id":    userID,
 		"session_id": sessionID,
+		"role":       role,
 		"exp":        time.Now().Add(time.Hour * 24).Unix(),
 	}
 

@@ -74,3 +74,16 @@ func Authenticate(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func CheckUserRole(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userCtx, _ := UserContext(r)
+		role := userCtx.Role
+
+		if role == "admin" || role == "asset_manager" {
+			utils.RespondError(w, http.StatusUnauthorized, nil, "access denied")
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}

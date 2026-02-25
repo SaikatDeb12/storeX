@@ -61,7 +61,7 @@ CREATE TABLE assets (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     brand           TEXT NOT NULL,
     model           TEXT NOT NULL,
-    serial_no       TEXT UNIQUE NOT NULL,
+    serial_number   TEXT UNIQUE NOT NULL,
     asset_type      asset_type NOT NULL,
     status          asset_status DEFAULT 'available',
     owner_type      asset_owner_type DEFAULT 'remotestate',

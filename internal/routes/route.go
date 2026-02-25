@@ -26,7 +26,15 @@ func SetUpRouter() *chi.Mux {
 				r.Get("/", handler.GetAllUsers)
 			})
 		})
+		v1.Group(func(r chi.Router) {
+			r.Use(middleware.CheckUserRole)
+			r.Route("/asset", func(r chi.Router) {
+				r.Post("/", handler.CreateAsset)
+			})
+		})
 	})
 
 	return router
 }
+
+// TODO : when the jwt is expiring add archived_at timestamp on users

@@ -27,3 +27,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		"users": userDetails,
 	})
 }
+
+// another middlware
+// asset create and individual assets
+// logout

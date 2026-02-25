@@ -4,7 +4,6 @@ import "time"
 
 type Asset struct {
 	ID            string     `json:"id" db:"id"`
-	Name          string     `json:"name" db:"name"`
 	Brand         string     `json:"brand" db:"brand"`
 	Model         string     `json:"model" db:"model"`
 	SerialNo      string     `json:"serialNo" db:"serial_no"`
