@@ -7,11 +7,12 @@ import (
 
 func InsertKeyboardDetails(assetID string, req models.KeyboardRequest) error {
 	SQL := `
-		INSERT INTO keyboards(connectivity, layout)
-		VALUES($1, $2)
+		INSERT INTO keyboards(asset_id, connectivity, layout)
+		VALUES($1, $2, $3)
 	`
 
 	args := []interface{}{
+		assetID,
 		req.Connectivity,
 		req.Layout,
 	}
@@ -22,11 +23,12 @@ func InsertKeyboardDetails(assetID string, req models.KeyboardRequest) error {
 
 func InsertLaptopDetails(assetID string, req models.LaptopRequest) error {
 	SQL := `
-		INSERT INTO laptops(processor, ram, storage, operating_sysem, charger, device_password)
-		VALUES($1, $2, $3, $4, $5, $6)
+		INSERT INTO laptops(asset_id, processor, ram, storage, operating_system, charger, device_password)
+		VALUES($1, $2, $3, $4, $5, $6, $7)
 	`
 
 	args := []interface{}{
+		assetID,
 		req.Processor,
 		req.RAM,
 		req.Storage,
@@ -41,11 +43,12 @@ func InsertLaptopDetails(assetID string, req models.LaptopRequest) error {
 
 func InsertMouseDetails(assetID string, req models.MouseRequest) error {
 	SQL := `
-		INSERT INTO mice(dpi, connectivity)
-		VALUES($1, $2)
+		INSERT INTO mice(asset_id, dpi, connectivity)
+		VALUES($1, $2, $3)
 	`
 
 	args := []interface{}{
+		assetID,
 		req.DPI,
 		req.Connectivity,
 	}
@@ -56,11 +59,12 @@ func InsertMouseDetails(assetID string, req models.MouseRequest) error {
 
 func InsertMobileDetails(assetID string, req models.MobileRequest) error {
 	SQL := `
-		INSERT INTO mobiles(operating_system, ram, storage, charger, device_password)
-		VALUES($1, $2, $3, $4, $5)
+		INSERT INTO mobiles(asset_id, operating_system, ram, storage, charger, device_password)
+		VALUES($1, $2, $3, $4, $5, $6)
 	`
 
 	args := []interface{}{
+		assetID,
 		req.OperatingSystem,
 		req.RAM,
 		req.Storage,
@@ -74,8 +78,8 @@ func InsertMobileDetails(assetID string, req models.MobileRequest) error {
 
 func CreateAsset(model models.CreateAssetRequest) (string, error) {
 	SQL := `
-		INSERT INTO assets(brand, model, serial_number, asset_type, status, owner_type, warranty_start, warranty_end)
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO assets(brand, model, serial_number, asset_type, owner_type, warranty_start, warranty_end)
+		VALUES($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id
 	`
 
@@ -84,7 +88,6 @@ func CreateAsset(model models.CreateAssetRequest) (string, error) {
 		model.Model,
 		model.SerialNumber,
 		model.Type,
-		model.Status,
 		model.Owner,
 		model.WarrantyStart,
 		model.WarrantyEnd,

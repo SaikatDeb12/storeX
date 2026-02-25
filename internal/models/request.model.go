@@ -48,6 +48,21 @@ type CreateAssetRequest struct {
 	Model         string    `json:"model" db:"model" validate:"required"`
 	SerialNumber  string    `json:"serialNumber" db:"serial_number" validate:"required"`
 	Type          string    `json:"assetType" db:"asset_type" validate:"required,oneof=laptop keyboard mouse mobile"`
+	Owner         string    `json:"owner" db:"owner_type" validate:"required,oneof=client remotestate"`
+	WarrantyStart time.Time `json:"warrantyStart" db:"warranty_start" validate:"required"`
+	WarrantyEnd   time.Time `json:"warrantyEnd" db:"warranty_end" validate:"required"`
+
+	Laptop   *LaptopRequest   `json:"laptop"`
+	Keyboard *KeyboardRequest `json:"keyboard"`
+	Mouse    *MouseRequest    `json:"mouse"`
+	Mobile   *MobileRequest   `json:"mobile"`
+}
+
+type UpdateAssestRequest struct {
+	Brand         string    `json:"brand" db:"brand" validate:"required"`
+	Model         string    `json:"model" db:"model" validate:"required"`
+	SerialNumber  string    `json:"serialNumber" db:"serial_number" validate:"required"`
+	Type          string    `json:"assetType" db:"asset_type" validate:"required,oneof=laptop keyboard mouse mobile"`
 	Status        string    `json:"status" db:"status" validate:"required,oneof=available assigned in_service under_repair damaged"`
 	Owner         string    `json:"owner" db:"owner_type" validate:"required,oneof=client remotestate"`
 	WarrantyStart time.Time `json:"warrantyStart" db:"warranty_start" validate:"required"`
@@ -60,6 +75,7 @@ type CreateAssetRequest struct {
 }
 
 type LaptopRequest struct {
+	AssetID         string  `json:"assetID" db:"asset_id"`
 	Processor       string  `json:"processor" db:"processor"`
 	RAM             string  `json:"ram" db:"ram"`
 	Storage         string  `json:"storage" db:"storage"`
@@ -69,16 +85,19 @@ type LaptopRequest struct {
 }
 
 type KeyboardRequest struct {
+	AssetID      string  `json:"assetID" db:"asset_id"`
 	Layout       *string `json:"layout" db:"layout"`
 	Connectivity string  `json:"connectivity" db:"connectivity"`
 }
 
 type MouseRequest struct {
+	AssetID      string `json:"assetID" db:"asset_id"`
 	DPI          *int   `json:"dpi" db:"dpi"`
 	Connectivity string `json:"connectivity" db:"connectivity"`
 }
 
 type MobileRequest struct {
+	AssetID         string  `json:"assetID" db:"asset_id"`
 	OperatingSystem string  `json:"operatingSystem" db:"operating_system"`
 	RAM             string  `json:"ram" db:"ram"`
 	Storage         string  `json:"storage" db:"storage"`

@@ -35,7 +35,7 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		err = dbhelper.InsertKeyboardDetails(assetID, *req.Keyboard)
 	case "mouse":
 		err = dbhelper.InsertMouseDetails(assetID, *req.Mouse)
-	case "Mobile":
+	case "mobile":
 		err = dbhelper.InsertMobileDetails(assetID, *req.Mobile)
 	default:
 		err = errors.New("invalid asset type")
