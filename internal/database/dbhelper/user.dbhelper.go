@@ -89,17 +89,22 @@ func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoR
 	}
 
 	// to make change on the original slice:
-	for i := range users {
-		userDetails, err := GetAssetInfo(users[i].ID, assetStatus)
+	filteredUsers := make([]models.UserInfoRequest, 0)
+	for _, user := range users {
+		assetDetails, err := GetAssetInfo(user.ID, assetStatus)
 		if err != nil {
 			return users, err
 		}
 
-		// TODO: : if there's a user who's status is different than expected.. then delete that user record from the slice
+		// If filtering by assetStatus and no matching assets found → skip user
+		if assetStatus != "" && len(assetDetails) == 0 {
+			continue
+		}
 
-		users[i].AssetDetails = userDetails
+		user.AssetDetails = assetDetails
+		filteredUsers = append(filteredUsers, user)
 	}
-	return users, err
+	return filteredUsers, err
 
 	// change in the copy not the original
 	// for _, user := range users {
