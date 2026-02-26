@@ -6,7 +6,7 @@ type Asset struct {
 	ID            string     `json:"id" db:"id"`
 	Brand         string     `json:"brand" db:"brand"`
 	Model         string     `json:"model" db:"model"`
-	SerialNo      string     `json:"serialNo" db:"serial_no"`
+	SerialNumber  string     `json:"serialNumber" db:"serial_number"`
 	Type          string     `json:"assetType" db:"asset_type"`
 	Status        string     `json:"status" db:"status"`
 	Owner         string     `json:"owner" db:"owner_type"`

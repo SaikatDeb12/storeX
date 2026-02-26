@@ -104,3 +104,28 @@ type MobileRequest struct {
 	Charger         *string `json:"charger" db:"charger"`
 	DevicePassword  string  `json:"devicePassword" db:"device_password"`
 }
+
+type AllAssetsInfoRequest struct {
+	ID            string     `json:"id" db:"id"`
+	Brand         string     `json:"brand" db:"brand"`
+	Model         string     `json:"model" db:"model"`
+	SerialNumber  string     `json:"serialNumber" db:"serial_number"`
+	Type          string     `json:"assetType" db:"asset_type"`
+	Status        string     `json:"status" db:"status"`
+	Owner         string     `json:"owner" db:"owner_type"`
+	AssignedByID  *string    `json:"assignedByID" db:"assigned_by_id"`
+	AssignedToID  *string    `json:"assignedTo" db:"assigned_to_id"`
+	AssignedAt    *time.Time `json:"assignedAt" db:"assigned_at"`
+	WarrantyStart time.Time  `json:"warrantyStart" db:"warranty_start"`
+	WarrantyEnd   time.Time  `json:"warrantyEnd" db:"warranty_end"`
+	ServiceStart  *time.Time `json:"serviceStart" db:"service_start"`
+	ServiceEnd    *time.Time `json:"serviceEnd" db:"service_end"`
+	ReturnedAt    *time.Time `json:"returnedAt" db:"returned_at"`
+	CreatedAt     time.Time  `db:"created_at"`
+	UpdatedAt     *time.Time `db:"updated_at"`
+}
+
+type AssetAssignRequest struct {
+	AssetID string `json:"assetID" db:"asset_id"`
+	UserID  string `json:"userID" db:"user_id"`
+}

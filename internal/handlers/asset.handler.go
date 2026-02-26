@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
+	"github.com/SaikatDeb12/storeX/internal/middleware"
 	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/SaikatDeb12/storeX/internal/utils"
 )
@@ -45,4 +46,43 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, err, "")
 		return
 	}
+}
+
+func ShowAssets(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	brand := query.Get("brand")
+	model := query.Get("model")
+	assetType := query.Get("type")
+	status := query.Get("status")
+	owner := query.Get("owner")
+	serialNumber := query.Get("serial_number")
+
+	Assets, err := dbhelper.ShowAssets(brand, model, assetType, serialNumber, status, owner)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch assets")
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, struct {
+		Assets []models.AllAssetsInfoRequest `json:"assets"`
+	}{Assets: Assets})
+}
+
+func AssignedAssets(w http.ResponseWriter, r *http.Request) {
+	var req models.AssetAssignRequest
+
+	if parseErr := utils.ParseBody(r.Body, &req); parseErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, parseErr, "failed parsing body")
+		return
+	}
+	userCtx, _ := middleware.UserContext(r)
+	currectUserID := userCtx.UserID
+
+	err := dbhelper.AssignedAssets(req.AssetID, currectUserID, req.UserID)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "failed to assigned assets")
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "successfully assigned",
+	})
 }
