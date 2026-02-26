@@ -14,9 +14,6 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	employment := query.Get("employment")
 	assetStatus := query.Get("status")
 
-	// userCtx, _ := middleware.UserContext(r)
-	// userID := userCtx.UserID
-
 	userDetails, err := dbhelper.GetUserInfo(name, role, employment, assetStatus)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch users")

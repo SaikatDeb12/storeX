@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
 	"github.com/SaikatDeb12/storeX/internal/middleware"
@@ -57,14 +58,36 @@ func ShowAssets(w http.ResponseWriter, r *http.Request) {
 	owner := query.Get("owner")
 	serialNumber := query.Get("serial_number")
 
-	Assets, err := dbhelper.ShowAssets(brand, model, assetType, serialNumber, status, owner)
+	limit := 10
+	page := 1
+	var err error
+
+	if limitInput := query.Get("limit"); limitInput != "" {
+		limit, err = strconv.Atoi(limitInput)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit")
+			return
+		}
+	}
+
+	if pageInput := query.Get("page"); pageInput != "" {
+		page, err = strconv.Atoi(pageInput)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit")
+			return
+		}
+	}
+
+	offset := (page - 1) * limit
+
+	assets, err := dbhelper.ShowAssets(brand, model, assetType, serialNumber, status, owner, limit, offset)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch assets")
 		return
 	}
-	utils.RespondJSON(w, http.StatusOK, struct {
-		Assets []models.AllAssetsInfoRequest `json:"assets"`
-	}{Assets: Assets})
+	utils.RespondJSON(w, http.StatusOK, map[string]any{
+		"assets": assets,
+	})
 }
 
 func AssignedAssets(w http.ResponseWriter, r *http.Request) {

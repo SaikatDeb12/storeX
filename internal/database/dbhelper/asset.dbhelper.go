@@ -104,21 +104,21 @@ func CreateAsset(model models.CreateAssetRequest) (string, error) {
 	return assetID, nil
 }
 
-func ShowAssets(brand, model, assetType, serial_number, status, owner string) ([]models.AllAssetsInfoRequest, error) {
-	SQL := `SELECT id, brand, model, asset_type, serial_number, status, owner_type, assigned_by_id, assigned_to_id, assigned_at, warranty_start, warranty_end, service_start, service_end, returned_at, created_at,updated_at 
+func ShowAssets(brand, model, assetType, serial_number, status, owner string, limit, offset int) (models.DashboardData, error) {
+	SQL := `SELECT id, brand, model, asset_type, serial_number, status, owner_type, assigned_by_id, assigned_to_id, assigned_at, warranty_start, warranty_end, service_start, service_end, returned_at, created_at, updated_at 
           FROM assets
           WHERE archived_at IS NULL 
           AND (
-              $1= '' or brand LIKE'%'||$1||'%'
+              $1= '' or brand LIKE '%'||$1||'%'
           )
           AND(
-              $2 ='' or model LIKE'%'||$2||'%'
+              $2 ='' or model LIKE '%'||$2||'%'
           )
           AND (
-              $3='' or asset_type::text LIKE'%'||$3||'%'
+              $3='' or asset_type::text LIKE '%'||$3||'%'
           )
           AND(
-              $4 ='' or serial_number LIKE'%'||$4||'%'
+              $4 ='' or serial_number LIKE '%'||$4||'%'
           )
           AND(
               $5='' or status::text LIKE '%'||$5||'%'
@@ -127,14 +127,27 @@ func ShowAssets(brand, model, assetType, serial_number, status, owner string) ([
               $6=''or owner_type::text LIKE '%'||$6||'%'
           )
           ORDER BY created_at
+		  LIMIT $7 OFFSET $8
           `
-	assets := make([]models.AllAssetsInfoRequest, 0)
-
-	err := database.DB.Select(&assets, SQL, brand, model, assetType, serial_number, status, owner)
+	var result models.DashboardData
+	err := database.DB.Select(&result.Assets, SQL, brand, model, assetType, serial_number, status, owner, limit, offset)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
-	return assets, nil
+
+	SQL = `
+		SELECT 
+		COUNT(*) AS total,
+		COUNT(*) FILTER (WHERE status='available' ) AS available,
+		COUNT(*) FILTER (WHERE status='assigned' ) AS assigned,
+		COUNT(*) FILTER (WHERE status='under_repair' ) AS waitingForRepair,
+		COUNT(*) FILTER (WHERE status='in_service' ) AS inService,
+		COUNT(*) FILTER (WHERE status='damaged' ) AS damaged
+		FROM assets
+		WHERE archived_at IS NULL
+	`
+	err = database.DB.Get(&result.Summary, SQL)
+	return result, err
 }
 
 func AssignedAssets(id, assignedById, assignedTo string) error {

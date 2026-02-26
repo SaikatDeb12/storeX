@@ -129,3 +129,17 @@ type AssetAssignRequest struct {
 	AssetID string `json:"assetID" db:"asset_id"`
 	UserID  string `json:"userID" db:"user_id"`
 }
+
+type DashboardSummaryRequest struct {
+	Total            int `json:"total"`
+	Available        int `json:"available"`
+	Assigned         int `json:"assigned"`
+	WaitingForRepair int `json:"waitingForRepair"`
+	InService        int `json:"inService"`
+	Damaged          int `json:"damaged"`
+}
+
+type DashboardData struct {
+	Summary DashboardSummaryRequest `json:"summary"`
+	Assets  []AllAssetsInfoRequest  `json:"assetInfo"`
+}
