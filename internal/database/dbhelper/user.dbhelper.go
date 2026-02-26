@@ -64,7 +64,7 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 
 func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
 	SQL := `
-		SELECT id, brand, model, status
+		SELECT id, brand, model, status, asset_type
 		FROM assets
 		WHERE ($1='' OR assigned_to_id::TEXT=$1)
 		AND ($2 = '' OR status::TEXT=$2)
