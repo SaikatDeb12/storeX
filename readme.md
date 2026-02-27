@@ -147,7 +147,7 @@ Installation
 
 Clone the repository:
 
-git clone https://github.com/your-username/asset-management-system.git
+git clone https://github.com/SaikatDeb12/storeX.git
 cd asset-management-system
 
 Configure environment variables in .env:
