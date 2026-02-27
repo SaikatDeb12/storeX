@@ -128,7 +128,7 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req models.UpdateAssetRequest
-	err := utils.ParseBody(r.Body, req)
+	err := utils.ParseBody(r.Body, &req)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid body")
 		return
@@ -155,7 +155,7 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
-		err := dbhelper.UpdateAsset(tx, assetId, req.Brand, req.Model, req.SerialNo, req.Type, req.Owner, warrantyStart, warrantyEnd)
+		err := dbhelper.UpdateAsset(tx, assetId, req.Brand, req.Model, req.SerialNumber, req.Type, req.Owner, warrantyStart, warrantyEnd)
 		if err != nil {
 			return err
 		}
@@ -193,5 +193,47 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "asset updated",
+	})
+}
+
+func SentToService(w http.ResponseWriter, r *http.Request) {
+	assetId := chi.URLParam(r, "id")
+	if assetId == "" {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid id")
+		return
+	}
+	var body models.SentServiceRequest
+	err := utils.ParseBody(r.Body, &body)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid body")
+		return
+	}
+	err = utils.ValidateStruct(&body)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "validation failed")
+		return
+	}
+
+	serviceStart, err := time.Parse("2006-01-02", body.StartDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service date")
+		return
+	}
+	serviceEnd, err := time.Parse("2006-01-02", body.EndDate)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service end date")
+		return
+	}
+	if serviceEnd.Before(serviceStart) {
+		utils.RespondError(w, http.StatusBadRequest, nil, "end date must be after start date")
+		return
+	}
+	err = dbhelper.SentToService(assetId, serviceStart, serviceEnd)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "fail to sent for service")
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "asset sent for service successfully",
 	})
 }

@@ -147,8 +147,8 @@ type DashboardData struct {
 type UpdateAssetRequest struct {
 	Brand         string `json:"brand" validate:"required"`
 	Model         string `json:"model" validate:"required"`
-	SerialNo      string `json:"serialNo" validate:"required"`
-	Type          string `json:"type" validate:"required"`
+	SerialNumber  string `json:"serialNumber" validate:"required"`
+	Type          string `json:"assetType" validate:"required"`
 	Owner         string `json:"owner" validate:"required"`
 	WarrantyStart string `json:"warrantyStart" validate:"required"`
 	WarrantyEnd   string `json:"warrantyEnd" validate:"required"`
@@ -157,4 +157,9 @@ type UpdateAssetRequest struct {
 	Mouse    *MouseRequest    `json:"mouse,omitempty"`
 	Keyboard *KeyboardRequest `json:"keyboard,omitempty"`
 	Mobile   *MobileRequest   `json:"mobile,omitempty"`
+}
+
+type SentServiceRequest struct {
+	StartDate string `json:"start_date" db:"service_start" validate:"required"`
+	EndDate   string `json:"end_date" db:"service_end" validate:"required"`
 }

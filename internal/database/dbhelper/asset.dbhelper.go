@@ -176,7 +176,7 @@ func AssignedAssets(id, assignedById, assignedTo string) error {
 
 func UpdateAsset(tx *sqlx.Tx, assetID, brand, model, serialNo, assetType, owner string, warrantyStart, warrantyEnd time.Time) error {
 	query := `UPDATE assets
-            set brand = $2, model = $3, serial_no = $4, type=$5,owner=$6,warranty_start = $7,warranty_end=$8, updated_at =now()
+            set brand = $2, model = $3, serial_number = $4, asset_type=$5, owner_type=$6, warranty_start = $7,warranty_end=$8, updated_at =now()
             where id= $1 and archived_at is null `
 	_, err := tx.Exec(query, assetID, brand, model, serialNo, assetType, owner, warrantyStart, warrantyEnd)
 	if err != nil {
@@ -187,14 +187,14 @@ func UpdateAsset(tx *sqlx.Tx, assetID, brand, model, serialNo, assetType, owner 
 
 func UpdateLaptop(tx *sqlx.Tx, assetID string, laptop *models.LaptopRequest) error {
 	query := `
-    UPDATE laptop
+    UPDATE laptops
     SET
         processor = $2,
         ram = $3,
         storage = $4,
-        os = $5,
+        operating_system = $5,
         charger = $6,
-        password = $7
+        device_password = $7
     WHERE asset_id = $1
     `
 
@@ -213,7 +213,7 @@ func UpdateLaptop(tx *sqlx.Tx, assetID string, laptop *models.LaptopRequest) err
 
 func UpdateMouse(tx *sqlx.Tx, assetID string, mouse *models.MouseRequest) error {
 	query := `
-    UPDATE mouse
+    UPDATE mice
     SET
         dpi = $2,
         connectivity = $3
@@ -226,7 +226,7 @@ func UpdateMouse(tx *sqlx.Tx, assetID string, mouse *models.MouseRequest) error 
 
 func UpdateKeyboard(tx *sqlx.Tx, assetID string, keyboard *models.KeyboardRequest) error {
 	query := `
-    UPDATE keyboard
+    UPDATE keyboards
     SET
         layout = $2,
         connectivity = $3
@@ -239,13 +239,13 @@ func UpdateKeyboard(tx *sqlx.Tx, assetID string, keyboard *models.KeyboardReques
 
 func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) error {
 	query := `
-    UPDATE mobile
+    UPDATE mobiles
     SET
-        os = $2,
+        operating_system = $2,
         ram = $3,
         storage = $4,
         charger = $5,
-        password = $6
+        device_password = $6
     WHERE asset_id = $1
     `
 
@@ -260,4 +260,14 @@ func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) err
 	)
 
 	return err
+}
+
+func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
+	query := `update assets set status='in_service',service_start=$2,service_end=$3,updated_at=now()
+              where id=$1 and archived_at is null and status ='available'`
+	_, err := database.DB.Exec(query, assetId, serviceStart, serviceEnd)
+	if err != nil {
+		return err
+	}
+	return nil
 }
