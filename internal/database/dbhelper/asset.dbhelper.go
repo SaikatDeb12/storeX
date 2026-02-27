@@ -2,7 +2,6 @@ package dbhelper
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
@@ -161,9 +160,6 @@ func AssignedAssets(id, assignedById, assignedTo string) error {
           AND archived_at IS NULL 
               `
 	// _, err := database.DB.Exec(SQL, assignedById, assignedTo, id)
-	fmt.Println(id)
-	fmt.Println(assignedById)
-	fmt.Println(assignedTo)
 	res, err := database.DB.Exec(SQL, id, assignedById, assignedTo)
 	if err != nil {
 		return err

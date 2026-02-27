@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -36,7 +37,7 @@ func Authenticate(next http.Handler) http.Handler {
 
 		tokenString := strings.TrimPrefix(authHeader, brearerPrefix)
 		token, parseErr := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, err := token.Method.(*jwt.SigningMethodHMAC); !err {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New("invalid signing method")
 			}
 			return []byte(utils.SecretKey), nil
@@ -65,9 +66,11 @@ func Authenticate(next http.Handler) http.Handler {
 			return
 		}
 
+		role := claimValues["role"].(string)
 		requestContext := models.RequestContext{
 			UserID:    userID,
 			SessionID: sessionID,
+			Role:      role,
 		}
 
 		ctx := context.WithValue(r.Context(), RequestContextKey, requestContext)
@@ -75,15 +78,29 @@ func Authenticate(next http.Handler) http.Handler {
 	})
 }
 
+// func CheckUserRole(next http.Handler) http.Handler {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		userCtx, _ := UserContext(r)
+// 		userRole := userCtx.Role
+//
+// 		if userRole == "admin" || userRole == "asset_manager" {
+// 			next.ServeHTTP(w, r)
+// 			return
+// 		}
+// 		utils.RespondError(w, http.StatusUnauthorized, nil, "not authorized")
+// 	})
+// }
+
 func CheckUserRole(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userCtx, _ := UserContext(r)
 		role := userCtx.Role
 
+		fmt.Println(role)
 		if role == "admin" || role == "asset_manager" {
-			utils.RespondError(w, http.StatusUnauthorized, nil, "access denied")
+			next.ServeHTTP(w, r)
 			return
 		}
-		next.ServeHTTP(w, r)
+		utils.RespondError(w, http.StatusUnauthorized, nil, "access denied")
 	})
 }

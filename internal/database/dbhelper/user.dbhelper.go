@@ -50,7 +50,7 @@ func CreateSession(userID string) (string, error) {
 
 func GetUserAuthByEmail(email string) (models.User, error) {
 	SQL := `
-		SELECT id, email, password, archived_at 
+		SELECT id, email, password  
 		FROM users 
 		WHERE email=TRIM(LOWER($1)) AND archived_at IS NULL
 	`
@@ -66,7 +66,7 @@ func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error)
 	SQL := `
 		SELECT id, brand, model, status, asset_type
 		FROM assets
-		WHERE ($1='' OR assigned_to_id::TEXT=$1)
+		WHERE assigned_to_id=$1
 		AND ($2 = '' OR status::TEXT=$2)
 	`
 	assetDetails := make([]models.AssetInfoRequest, 0)

@@ -47,6 +47,9 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, err, "")
 		return
 	}
+	utils.RespondJSON(w, http.StatusCreated, map[string]string{
+		"message": "asset added",
+	})
 }
 
 func ShowAssets(w http.ResponseWriter, r *http.Request) {

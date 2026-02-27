@@ -81,6 +81,7 @@ func CheckPassword(hashedPassword, password string) error {
 }
 
 func GenerateJWT(userID, sessionID, role string) (string, error) {
+	fmt.Println("generate: ", role)
 	claims := jwt.MapClaims{
 		"user_id":    userID,
 		"session_id": sessionID,
