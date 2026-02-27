@@ -1,32 +1,33 @@
+## Intro
 Asset Management System API is a production-ready backend service designed to manage organizational assets, user authentication, role-based access control, and asset lifecycle operations. It provides secure JWT-based authentication, session management, and fine-grained role authorization for handling enterprise-level asset workflows.
 
-Features
+## Features
 
-User Registration and Login: Secure authentication with hashed passwords.
+- User Registration and Login: Secure authentication with hashed passwords.
 
-JWT-Based Authentication: Token-based authentication with session tracking.
+- JWT-Based Authentication: Token-based authentication with session tracking.
 
-Session Management: Server-side session validation for enhanced security.
+- Session Management: Server-side session validation for enhanced security.
 
-Role-Based Access Control (RBAC): Restrict critical asset operations based on user roles.
+- Role-Based Access Control (RBAC): Restrict critical asset operations based on user roles.
 
-User Management: Fetch all users and retrieve user details by ID.
+- User Management: Fetch all users and retrieve user details by ID.
 
-Asset Creation: Add new assets with structured validation.
+- Asset Creation: Add new assets with structured validation.
 
-Asset Fetching: Retrieve assets with protected access.
+- Asset Fetching: Retrieve assets with protected access.
 
-Asset Updating: Modify asset details securely.
+- Asset Updating: Modify asset details securely.
 
-Asset Assignment: Assign assets to users.
+- Asset Assignment: Assign assets to users.
 
-Asset Service Handling: Mark assets as sent to service.
+- Asset Service Handling: Mark assets as sent to service.
 
-Transactional Database Operations: Atomic user and session creation.
+- Transactional Database Operations: Atomic user and session creation.
 
-Centralized Error Handling: Structured and consistent API responses.
+- Centralized Error Handling: Structured and consistent API responses.
 
-Health Check Endpoint: Monitor server availability.
+- Health Check Endpoint: Monitor server availability.
 
 Tech Stack
 
