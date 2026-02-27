@@ -3,7 +3,6 @@ package middleware
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -96,7 +95,6 @@ func CheckUserRole(next http.Handler) http.Handler {
 		userCtx, _ := UserContext(r)
 		role := userCtx.Role
 
-		fmt.Println(role)
 		if role == "admin" || role == "asset_manager" {
 			next.ServeHTTP(w, r)
 			return

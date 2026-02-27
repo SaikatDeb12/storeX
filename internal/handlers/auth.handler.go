@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
@@ -51,8 +50,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	role := req.Role
-	fmt.Println("register func: ", role)
-
 	token, err := utils.GenerateJWT(userID, sessionID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "error while generating token")
@@ -96,7 +93,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	role := user.Role
-	fmt.Println("login func: ", role)
 	token, err := utils.GenerateJWT(userID, sessionID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "error while generating token")
