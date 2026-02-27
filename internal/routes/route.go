@@ -34,7 +34,7 @@ func SetUpRouter() *chi.Mux {
 					r.Post("/", handler.CreateAsset)
 					r.Put("/update/{id}", handler.UpdateAsset)
 					r.Put("/assign", handler.AssignedAssets)
-					r.Put("/service", handler.SentToService)
+					r.Put("/service/{id}", handler.SentToService)
 				})
 			})
 			r.Post("/auth/logout", handler.Logout)

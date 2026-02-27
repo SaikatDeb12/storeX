@@ -264,7 +264,7 @@ func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) err
 
 func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 	query := `update assets set status='in_service',service_start=$2,service_end=$3,updated_at=now()
-              where id=$1 and archived_at is null and status ='available'`
+              where id=$1 and archived_at is NULL and status ='available'`
 	_, err := database.DB.Exec(query, assetId, serviceStart, serviceEnd)
 	if err != nil {
 		return err
