@@ -62,7 +62,7 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
+func FetchAssetsInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
 	SQL := `
 		SELECT id, brand, model, status, asset_type
 		FROM assets
@@ -74,7 +74,18 @@ func GetAssetInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error)
 	return assetDetails, err
 }
 
-func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoRequest, error) {
+func FetchAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
+	SQL := `
+		SELECT id, brand, model, status, asset_type
+		FROM assets
+		WHERE archived_at IS NULL AND assigned_to_id=$1
+	`
+	assetDetails := make([]models.AssetInfoRequest, 0)
+	err := database.DB.Select(&assetDetails, SQL, userID)
+	return assetDetails, err
+}
+
+func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRequest, error) {
 	SQL := `
 		SELECT id, name, email, phone_number, role, employment, created_at
 		FROM users
@@ -91,7 +102,7 @@ func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoR
 	// to make change on the original slice:
 	filteredUsers := make([]models.UserInfoRequest, 0)
 	for _, user := range users {
-		assetDetails, err := GetAssetInfo(user.ID, assetStatus)
+		assetDetails, err := FetchAssetsInfo(user.ID, assetStatus)
 		if err != nil {
 			return users, err
 		}
@@ -115,6 +126,26 @@ func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoR
 	// 	fmt.Println(userDetails)
 	// 	user.AssetDetails = userDetails
 	// }
+}
+
+func FetchUserByID(userID string) (models.UserInfoRequest, error) {
+	SQL := `
+		SELECT name, email, phone_number, role, employment, created_at
+		FROM users
+		WHERE archived_at IS NULL AND id=$1
+	`
+	var user models.UserInfoRequest
+	err := database.DB.Get(&user, SQL, userID)
+	if err != nil {
+		return user, err
+	}
+
+	assets, err := FetchAssetInfo(userID)
+	if len(assets) == 0 {
+		return user, nil
+	}
+	user.AssetDetails = assets
+	return user, err
 }
 
 func ValidateUserSession(sessionID string) error {

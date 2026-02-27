@@ -5,6 +5,7 @@ import (
 
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
 	"github.com/SaikatDeb12/storeX/internal/utils"
+	"github.com/go-chi/chi/v5"
 )
 
 func GetAllUsers(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +15,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	employment := query.Get("employment")
 	assetStatus := query.Get("status")
 
-	userDetails, err := dbhelper.GetUserInfo(name, role, employment, assetStatus)
+	userDetails, err := dbhelper.FetchUsers(name, role, employment, assetStatus)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch users")
 		return
@@ -25,6 +26,15 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// another middlware
-// asset create and individual assets
-// logout
+func GetUserInfoByID(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "id")
+	userDetails, err := dbhelper.FetchUserByID(userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch user details")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]any{
+		"user": userDetails,
+	})
+}
