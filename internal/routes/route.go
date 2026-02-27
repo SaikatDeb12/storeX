@@ -32,7 +32,8 @@ func SetUpRouter() *chi.Mux {
 					r.Use(middleware.CheckUserRole)
 					r.Get("/", handler.FetchAssets)
 					r.Post("/", handler.CreateAsset)
-					r.Patch("/assign", handler.AssignedAssets)
+					r.Put("/update", handler.UpdateAsset)
+					r.Put("/assign", handler.AssignedAssets)
 				})
 			})
 			r.Post("/auth/logout", handler.Logout)
@@ -41,5 +42,3 @@ func SetUpRouter() *chi.Mux {
 
 	return router
 }
-
-// TODO : when the jwt is expiring add archived_at timestamp on users

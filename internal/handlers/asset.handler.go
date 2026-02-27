@@ -2,13 +2,18 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
 	"github.com/SaikatDeb12/storeX/internal/middleware"
 	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/SaikatDeb12/storeX/internal/utils"
+	"github.com/go-chi/chi/v5"
+	"github.com/jmoiron/sqlx"
 )
 
 func CreateAsset(w http.ResponseWriter, r *http.Request) {
@@ -113,5 +118,80 @@ func AssignedAssets(w http.ResponseWriter, r *http.Request) {
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"message": "successfully assigned",
+	})
+}
+
+func UpdateAsset(w http.ResponseWriter, r *http.Request) {
+	assetId := chi.URLParam(r, "id")
+	if assetId == "" {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid id")
+		return
+	}
+	var req models.UpdateAssetRequest
+	err := utils.ParseBody(r.Body, req)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid body")
+		return
+	}
+	validateErr := utils.ValidateStruct(&req)
+	if validateErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, validateErr, "fail to validate body")
+		return
+	}
+	warrantyStart, err := time.Parse("2006-01-02", req.WarrantyStart)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyStart")
+		return
+	}
+
+	warrantyEnd, err := time.Parse("2006-01-02", req.WarrantyEnd)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyEnd")
+		return
+	}
+
+	if warrantyEnd.Before(warrantyStart) {
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warranty range")
+		return
+	}
+	txErr := database.Tx(func(tx *sqlx.Tx) error {
+		err := dbhelper.UpdateAsset(tx, assetId, req.Brand, req.Model, req.SerialNo, req.Type, req.Owner, warrantyStart, warrantyEnd)
+		if err != nil {
+			return err
+		}
+		switch req.Type {
+
+		case "laptop":
+			if req.Laptop == nil {
+				return fmt.Errorf("laptop details required")
+			}
+			return dbhelper.UpdateLaptop(tx, assetId, req.Laptop)
+
+		case "mouse":
+			if req.Mouse == nil {
+				return fmt.Errorf("mouse details required")
+			}
+			return dbhelper.UpdateMouse(tx, assetId, req.Mouse)
+		case "keyboard":
+			if req.Keyboard == nil {
+				return fmt.Errorf("keyboard details required")
+			}
+			return dbhelper.UpdateKeyboard(tx, assetId, req.Keyboard)
+		case "mobile":
+			if req.Mobile == nil {
+				return fmt.Errorf("mobile details required")
+			}
+			return dbhelper.UpdateMobile(tx, assetId, req.Mobile)
+
+		default:
+			return fmt.Errorf("unsupported asset type")
+		}
+	})
+	if txErr != nil {
+		utils.RespondError(w, http.StatusBadRequest, txErr, "fail to update asset")
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "asset updated",
 	})
 }

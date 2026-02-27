@@ -2,9 +2,11 @@ package dbhelper
 
 import (
 	"errors"
+	"time"
 
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
+	"github.com/jmoiron/sqlx"
 )
 
 func InsertKeyboardDetails(assetID string, req models.KeyboardRequest) error {
@@ -170,4 +172,92 @@ func AssignedAssets(id, assignedById, assignedTo string) error {
 		return errors.New("asset not found or already archived")
 	}
 	return nil
+}
+
+func UpdateAsset(tx *sqlx.Tx, assetID, brand, model, serialNo, assetType, owner string, warrantyStart, warrantyEnd time.Time) error {
+	query := `UPDATE assets
+            set brand = $2, model = $3, serial_no = $4, type=$5,owner=$6,warranty_start = $7,warranty_end=$8, updated_at =now()
+            where id= $1 and archived_at is null `
+	_, err := tx.Exec(query, assetID, brand, model, serialNo, assetType, owner, warrantyStart, warrantyEnd)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateLaptop(tx *sqlx.Tx, assetID string, laptop *models.LaptopRequest) error {
+	query := `
+    UPDATE laptop
+    SET
+        processor = $2,
+        ram = $3,
+        storage = $4,
+        os = $5,
+        charger = $6,
+        password = $7
+    WHERE asset_id = $1
+    `
+
+	_, err := tx.Exec(query,
+		assetID,
+		laptop.Processor,
+		laptop.RAM,
+		laptop.Storage,
+		laptop.OperatingSystem,
+		laptop.Charger,
+		laptop.DevicePassword,
+	)
+
+	return err
+}
+
+func UpdateMouse(tx *sqlx.Tx, assetID string, mouse *models.MouseRequest) error {
+	query := `
+    UPDATE mouse
+    SET
+        dpi = $2,
+        connectivity = $3
+    WHERE asset_id = $1
+    `
+
+	_, err := tx.Exec(query, assetID, mouse.DPI, mouse.Connectivity)
+	return err
+}
+
+func UpdateKeyboard(tx *sqlx.Tx, assetID string, keyboard *models.KeyboardRequest) error {
+	query := `
+    UPDATE keyboard
+    SET
+        layout = $2,
+        connectivity = $3
+    WHERE asset_id = $1
+    `
+
+	_, err := tx.Exec(query, assetID, keyboard.Layout, keyboard.Connectivity)
+	return err
+}
+
+func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) error {
+	query := `
+    UPDATE mobile
+    SET
+        os = $2,
+        ram = $3,
+        storage = $4,
+        charger = $5,
+        password = $6
+    WHERE asset_id = $1
+    `
+
+	_, err := tx.Exec(
+		query,
+		assetID,
+		mobile.OperatingSystem,
+		mobile.RAM,
+		mobile.Storage,
+		mobile.Charger,
+		mobile.DevicePassword,
+	)
+
+	return err
 }

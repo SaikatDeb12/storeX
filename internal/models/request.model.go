@@ -143,3 +143,18 @@ type DashboardData struct {
 	Summary DashboardSummaryRequest `json:"summary"`
 	Assets  []AllAssetsInfoRequest  `json:"assetInfo"`
 }
+
+type UpdateAssetRequest struct {
+	Brand         string `json:"brand" validate:"required"`
+	Model         string `json:"model" validate:"required"`
+	SerialNo      string `json:"serialNo" validate:"required"`
+	Type          string `json:"type" validate:"required"`
+	Owner         string `json:"owner" validate:"required"`
+	WarrantyStart string `json:"warrantyStart" validate:"required"`
+	WarrantyEnd   string `json:"warrantyEnd" validate:"required"`
+
+	Laptop   *LaptopRequest   `json:"laptop,omitempty"`
+	Mouse    *MouseRequest    `json:"mouse,omitempty"`
+	Keyboard *KeyboardRequest `json:"keyboard,omitempty"`
+	Mobile   *MobileRequest   `json:"mobile,omitempty"`
+}

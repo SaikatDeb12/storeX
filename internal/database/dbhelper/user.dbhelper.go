@@ -1,6 +1,8 @@
 package dbhelper
 
 import (
+	"errors"
+
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
 )
@@ -154,6 +156,10 @@ func ValidateUserSession(sessionID string) error {
 		SET archived_at=NOW()
 		WHERE id=$1 AND archived_at IS NULL
 	`
-	_, err := database.DB.Exec(SQL, sessionID)
+	res, err := database.DB.Exec(SQL, sessionID)
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("session not found")
+	}
 	return err
 }
