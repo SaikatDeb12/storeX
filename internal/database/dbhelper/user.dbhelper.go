@@ -97,7 +97,7 @@ func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoR
 		}
 
 		// If filtering by assetStatus and no matching assets found → skip user
-		if assetStatus != "" && len(assetDetails) == 0 {
+		if assetStatus != "available" && len(assetDetails) == 0 {
 			continue
 		}
 
@@ -115,4 +115,14 @@ func GetUserInfo(name, role, employment, assetStatus string) ([]models.UserInfoR
 	// 	fmt.Println(userDetails)
 	// 	user.AssetDetails = userDetails
 	// }
+}
+
+func ValidateUserSession(sessionID string) error {
+	SQL := `
+		UPDATE user_sessions
+		SET archived_at=NOW()
+		WHERE id=$1 AND archived_at IS NULL
+	`
+	_, err := database.DB.Exec(SQL, sessionID)
+	return err
 }

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
+	"github.com/SaikatDeb12/storeX/internal/middleware"
 	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/SaikatDeb12/storeX/internal/utils"
 )
@@ -102,5 +103,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"message": "login successfull",
 		"token":   token,
+	})
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	userContext, ok := middleware.UserContext(r)
+	if !ok {
+		utils.RespondError(w, http.StatusUnauthorized, nil, "unauthorized")
+		return
+	}
+
+	sessionID := userContext.SessionID
+	if err := dbhelper.ValidateUserSession(sessionID); err != nil {
+		utils.RespondError(w, http.StatusForbidden, err, "no active session found")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Logged out successfully",
 	})
 }

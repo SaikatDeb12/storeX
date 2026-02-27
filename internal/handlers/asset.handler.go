@@ -52,7 +52,7 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func ShowAssets(w http.ResponseWriter, r *http.Request) {
+func FetchAssets(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	brand := query.Get("brand")
 	model := query.Get("model")
@@ -83,13 +83,16 @@ func ShowAssets(w http.ResponseWriter, r *http.Request) {
 
 	offset := (page - 1) * limit
 
-	assets, err := dbhelper.ShowAssets(brand, model, assetType, serialNumber, status, owner, limit, offset)
+	allAssets, err := dbhelper.FetchAssets(brand, model, assetType, serialNumber, status, owner, limit, offset)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch assets")
 		return
 	}
+
+	assetsCount, err := dbhelper.GettingAssetsCount()
 	utils.RespondJSON(w, http.StatusOK, map[string]any{
-		"assets": assets,
+		"dashboard": assetsCount,
+		"assets":    allAssets,
 	})
 }
 

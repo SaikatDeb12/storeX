@@ -103,7 +103,7 @@ func CreateAsset(model models.CreateAssetRequest) (string, error) {
 	return assetID, nil
 }
 
-func ShowAssets(brand, model, assetType, serial_number, status, owner string, limit, offset int) (models.DashboardData, error) {
+func FetchAssets(brand, model, assetType, serial_number, status, owner string, limit, offset int) ([]models.AssetAssignRequest, error) {
 	SQL := `SELECT id, brand, model, asset_type, serial_number, status, owner_type, assigned_by_id, assigned_to_id, assigned_at, warranty_start, warranty_end, service_start, service_end, returned_at, created_at, updated_at 
           FROM assets
           WHERE archived_at IS NULL 
@@ -128,13 +128,13 @@ func ShowAssets(brand, model, assetType, serial_number, status, owner string, li
           ORDER BY created_at
 		  LIMIT $7 OFFSET $8
           `
-	var result models.DashboardData
-	err := database.DB.Select(&result.Assets, SQL, brand, model, assetType, serial_number, status, owner, limit, offset)
-	if err != nil {
-		return result, err
-	}
+	var result []models.AssetAssignRequest
+	err := database.DB.Select(&result, SQL, brand, model, assetType, serial_number, status, owner, limit, offset)
+	return result, err
+}
 
-	SQL = `
+func GettingAssetsCount() (models.DashboardSummaryRequest, error) {
+	SQL := `
 		SELECT 
 		COUNT(*) AS total,
 		COUNT(*) FILTER (WHERE status='available' ) AS available,
@@ -145,7 +145,8 @@ func ShowAssets(brand, model, assetType, serial_number, status, owner string, li
 		FROM assets
 		WHERE archived_at IS NULL
 	`
-	err = database.DB.Get(&result.Summary, SQL)
+	var result models.DashboardSummaryRequest
+	err := database.DB.Get(&result, SQL)
 	return result, err
 }
 
