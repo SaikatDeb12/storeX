@@ -1,171 +1,183 @@
-Asset Management System API is a production-ready backend service designed to manage organizational assets, user authentication, role-based access control, and asset lifecycle operations. It provides secure JWT-based authentication, session management, and fine-grained role authorization for handling enterprise-level asset workflows.
+# Asset Management System
 
-Features
+A production-ready backend API service for managing organizational assets, users, authentication, and role-based access control.
 
-User Registration and Login: Secure authentication with hashed passwords.
+## Features
 
-JWT-Based Authentication: Token-based authentication with session tracking.
+### 1. User Authentication & Authorization
+- Secure user registration and login functionality
+- Passwords hashed using industry-standard algorithms
+- JWT-based authentication with server-side session validation
+- Role-Based Access Control (RBAC) for granular permissions
+- Secure logout functionality with session invalidation
 
-Session Management: Server-side session validation for enhanced security.
+### 2. User Management
+- Fetch all registered users (role-restricted)
+- Retrieve user details by ID
+- Role-based middleware enforcement for all operations
+- Atomic database transactions for user and session creation
 
-Role-Based Access Control (RBAC): Restrict critical asset operations based on user roles.
+### 3. Asset Management
+- Create new assets with structured validation
+- Fetch assets through protected routes
+- Update existing asset details securely
+- Assign assets to users
+- Mark assets as "sent to service" when required
+- Comprehensive asset lifecycle management
+- All critical operations protected by role-based authorization
 
-User Management: Fetch all users and retrieve user details by ID.
+### 4. Server & Security
+- Protected routes with JWT authentication
+- Multi-layer middleware validation:
+  - Token signature verification
+  - Session validity checking
+  - Role permission enforcement
+- Centralized error handling for consistent API responses
+- Health check endpoint for server monitoring
+- Modular and scalable architecture
 
-Asset Creation: Add new assets with structured validation.
+## Tech Stack
 
-Asset Fetching: Retrieve assets with protected access.
+- **Backend**: Go (Golang)
+- **Router**: Chi
+- **Database**: PostgreSQL
+- **Query Layer**: sqlx
+- **Authentication**: JWT
+- **Architecture**: Modular layered architecture
 
-Asset Updating: Modify asset details securely.
+## Project Structure
 
-Asset Assignment: Assign assets to users.
+├── cmd/
 
-Asset Service Handling: Mark assets as sent to service.
+│ └── main.go
 
-Transactional Database Operations: Atomic user and session creation.
+├── internal/
 
-Centralized Error Handling: Structured and consistent API responses.
+│ ├── handler/ # Request handlers
 
-Health Check Endpoint: Monitor server availability.
+│ ├── middleware/ # Auth & role middleware
 
-Tech Stack
+│ ├── dbhelper/ # Database helper functions
 
-Backend: Go (Golang)
+│ ├── database/ # Database connection & setup
 
-Router: Chi
+│ ├── models/ # Data models
 
-Database: PostgreSQL
+│ └── utils/ # Utility functions
 
-ORM/Query Layer: sqlx
 
-Authentication: JWT
+## API Routes
 
-Architecture: Modular layered architecture (handler, middleware, dbhelper, utils)
+Base URL: `/v1`
 
-API Routes
-Base URL
-/v1
-Public Routes
-Health Check
-GET /v1/health
-Register User
-POST /v1/auth/register
+### Authentication Routes (`/v1/auth`)
 
-Request Body:
+#### Register User
 
-{
-"name": "string",
-"email": "string",
-"phoneNumber": "string",
-"role": "string",
-"employment": "string",
-"password": "string"
-}
-
-Response:
-
-{
-"message": "user register successfully",
-"token": "jwt_token"
-}
-Login User
 POST /v1/auth/login
 
-Request Body:
-
+**Request Body:**
+```json
 {
-"email": "string",
-"password": "string"
+  "name": "string",
+  "email": "string",
+  "phoneNumber": "string",
+  "role": "string",
+  "employment": "string",
+  "password": "string"
 }
+```
 
-Response:
+#### Login User
 
+POST /v1/auth/login
+
+**Request Body:**
+```json
 {
-"message": "login successfull",
-"token": "jwt_token"
+  "email": "string",
+  "password": "string"
 }
-Protected Routes (Requires Authorization Header)
-Authorization: Bearer <jwt_token>
-User Routes
-Get All Users
-GET /v1/users
-Get User By ID
-GET /v1/users/{id}
-Asset Routes
-Fetch Assets
-GET /v1/asset
-Create Asset
-POST /v1/asset
-Update Asset
-PUT /v1/asset/update/{id}
-Assign Asset
-PUT /v1/asset/assign
-Send Asset to Service
-PUT /v1/asset/service/{id}
-Logout
+```
+
+#### Logout User
+
 POST /v1/auth/logout
 
-Response:
+### Protected Routes (Requires Authorization: Bearer <jwt_token>)
 
-{
-"message": "Logged out successfully"
-}
+User Routes (/v1/users)
+
+**Routes:**
+```
+GET /v1/users           # Fetch all users
+GET /v1/users/{id}      # Fetch user by ID
+```
+
+Asset Rroutes (/v1/asset)
+
+**Routes:**
+```
+GET    /v1/asset                    # Fetch all assets
+POST   /v1/asset                    # Create new asset
+PUT    /v1/asset/update/{id}         # Update asset details
+PUT    /v1/asset/assign              # Assign asset to user
+PUT    /v1/asset/service/{id}        # Mark asset for service
+```
+
 Authentication Flow
+----------------------
 
-User registers or logs in.
+1.  **User Registration/Login**: Server generates:
+    
+    -   User ID
+        
+    -   Session ID
+        
+    -   JWT Token (contains user\_id, session\_id, and role)
+        
+2.  **Token Storage**: Client securely stores the JWT token
+    
+3.  textAuthorization: Bearer
+    
+4.  **Middleware Validation**:
+    
+    -   Verifies token signature
+        
+    -   Validates session exists and is active
+        
+    -   Checks role permissions for the requested operation
+        
 
-Server generates:
-
-User ID
-
-Session ID
-
-JWT Token containing user_id, session_id, and role.
-
-Client stores token.
-
-Token must be included in the Authorization header.
-
-Middleware validates:
-
-Token signature
-
-Session validity
-
-Role permissions
-
-Project Structure
-/cmd
-/internal
-/handler
-/middleware
-/dbhelper
-/database
-/models
-/utils
 Installation
+---------------
 
-Clone the repository:
+### Prerequisites
 
-git clone https://github.com/your-username/asset-management-system.git
+-   Go 1.16+
+
+-   PostgreSQL
+    
+-   Git
+
+#### Steps
+Clone the repository
+
+```
+git clone https://github.com/SaikatDeb12/storeX.git
 cd asset-management-system
+```
 
-Configure environment variables in .env:
+#### Configure environment variables
+Create a .env file in the root directory:
 
-DATABASE_URL=
-JWT_SECRET=
+```
+DATABASE_URL=postgresql://username:password@localhost:5432/dbname?sslmode=disable
+JWT_SECRET=your_jwt_secret_key
+```
 
-Run database migrations.
+#### Start the server
 
-Start the server:
-
+```
 go run cmd/main.go
-Usage
-
-Register or login to obtain a JWT token.
-
-Include the token in the Authorization header.
-
-Access protected routes based on assigned roles.
-
-Manage assets securely through the provided endpoints.
+```

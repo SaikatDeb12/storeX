@@ -165,4 +165,8 @@ func ValidateUserSession(sessionID string) error {
 }
 
 // func DeleteUserByID(userID string) error {
-// }
+	// if a user is deleted then, all the assets assigned to them will be "available"
+	// SQL := `
+	// 	UPDATE user
+	// `
+}
