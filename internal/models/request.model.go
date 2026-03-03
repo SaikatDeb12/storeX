@@ -144,3 +144,9 @@ type SentServiceRequest struct {
 	StartDate string `json:"start_date" db:"service_start" validate:"required"`
 	EndDate   string `json:"end_date" db:"service_end" validate:"required"`
 }
+
+type ErrorModel struct {
+	Error      string
+	Message    string
+	StatusCode int
+}

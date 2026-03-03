@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -34,12 +35,6 @@ func ValidateStruct(payload interface{}) error {
 	return validate.Struct(payload)
 }
 
-type ErrorModel struct {
-	Error      string
-	Message    string
-	StatusCode int
-}
-
 func RespondError(w http.ResponseWriter, statusCode int, err error, message string) {
 	w.WriteHeader(statusCode)
 	var errStr string
@@ -47,7 +42,7 @@ func RespondError(w http.ResponseWriter, statusCode int, err error, message stri
 		errStr = err.Error()
 	}
 
-	NewError := ErrorModel{
+	NewError := models.ErrorModel{
 		Message:    message,
 		Error:      errStr,
 		StatusCode: statusCode,
