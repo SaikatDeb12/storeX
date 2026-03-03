@@ -163,3 +163,6 @@ func ValidateUserSession(sessionID string) error {
 	}
 	return err
 }
+
+// func DeleteUserByID(userID string) error {
+// }

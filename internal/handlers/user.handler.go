@@ -38,3 +38,8 @@ func GetUserInfoByID(w http.ResponseWriter, r *http.Request) {
 		"user": userDetails,
 	})
 }
+
+func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
+	// userID := chi.URLParam(r, "id")
+	// err := dbhelper
+}

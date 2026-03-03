@@ -54,19 +54,19 @@ POST /v1/auth/register
 Request Body:
 
 {
-  "name": "string",
-  "email": "string",
-  "phoneNumber": "string",
-  "role": "string",
-  "employment": "string",
-  "password": "string"
+"name": "string",
+"email": "string",
+"phoneNumber": "string",
+"role": "string",
+"employment": "string",
+"password": "string"
 }
 
 Response:
 
 {
-  "message": "user register successfully",
-  "token": "jwt_token"
+"message": "user register successfully",
+"token": "jwt_token"
 }
 Login User
 POST /v1/auth/login
@@ -74,15 +74,15 @@ POST /v1/auth/login
 Request Body:
 
 {
-  "email": "string",
-  "password": "string"
+"email": "string",
+"password": "string"
 }
 
 Response:
 
 {
-  "message": "login successfull",
-  "token": "jwt_token"
+"message": "login successfull",
+"token": "jwt_token"
 }
 Protected Routes (Requires Authorization Header)
 Authorization: Bearer <jwt_token>
@@ -108,7 +108,7 @@ POST /v1/auth/logout
 Response:
 
 {
-  "message": "Logged out successfully"
+"message": "Logged out successfully"
 }
 Authentication Flow
 
@@ -137,12 +137,12 @@ Role permissions
 Project Structure
 /cmd
 /internal
-  /handler
-  /middleware
-  /dbhelper
-  /database
-  /models
-  /utils
+/handler
+/middleware
+/dbhelper
+/database
+/models
+/utils
 Installation
 
 Clone the repository:

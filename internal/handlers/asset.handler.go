@@ -141,13 +141,13 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, validateErr, "fail to validate body")
 		return
 	}
-	warrantyStart, err := time.Parse("2006-01-02", req.WarrantyStart)
+	warrantyStart, err := time.Parse(time.RFC3339, req.WarrantyStart)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyStart")
 		return
 	}
 
-	warrantyEnd, err := time.Parse("2006-01-02", req.WarrantyEnd)
+	warrantyEnd, err := time.Parse(time.RFC3339, req.WarrantyEnd)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyEnd")
 		return
@@ -205,24 +205,25 @@ func SentToService(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid id")
 		return
 	}
-	var body models.SentServiceRequest
-	err := utils.ParseBody(r.Body, &body)
+
+	var req models.SentServiceRequest
+	err := utils.ParseBody(r.Body, &req)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid body")
 		return
 	}
-	err = utils.ValidateStruct(&body)
+	err = utils.ValidateStruct(&req)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "validation failed")
 		return
 	}
 
-	serviceStart, err := time.Parse("2006-01-02", body.StartDate)
+	serviceStart, err := time.Parse(time.RFC3339, req.StartDate)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service date")
 		return
 	}
-	serviceEnd, err := time.Parse("2006-01-02", body.EndDate)
+	serviceEnd, err := time.Parse(time.RFC3339, req.EndDate)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service end date")
 		return
