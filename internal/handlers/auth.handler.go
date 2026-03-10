@@ -30,7 +30,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isEmailExists {
-		utils.RespondError(w, http.StatusUnauthorized, nil, "user already exists")
+		utils.RespondError(w, http.StatusConflict, nil, "user already exists")
 		return
 	}
 
@@ -44,13 +44,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	err = database.Tx(func(tx *sqlx.Tx) error {
 		userID, err := dbhelper.CreateUser(req.Name, req.Email, req.PhoneNumber, req.Role, req.Employment, hashedPassword)
 		if err != nil {
-			utils.RespondError(w, http.StatusInternalServerError, err, "failed to create user")
 			return err
 		}
 
 		sessionID, err := dbhelper.CreateSession(userID)
 		if err != nil {
-			utils.RespondError(w, http.StatusInternalServerError, err, "failed to create session")
 			return err
 		}
 

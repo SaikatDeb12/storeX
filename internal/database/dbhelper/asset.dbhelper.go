@@ -152,7 +152,7 @@ func GettingAssetsCount() (models.DashboardSummaryRequest, error) {
 	return result, err
 }
 
-func AssignedAssets(id, assignedById, assignedTo string) error {
+func AssignAssets(id, assignedById, assignedTo string) error {
 	SQL := `UPDATE assets
           SET assigned_to_id=$3,
 			  assigned_by_id=$2,
@@ -270,4 +270,20 @@ func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 		return err
 	}
 	return nil
+}
+
+func UnassignAssets(tx *sqlx.Tx, userID string) error {
+	SQL := `
+		UPDATE assets
+       SET assigned_to = NULL,
+           assigned_by_id = NULL,
+           assigned_on = NULL,
+           status = 'available',
+           returned_on = now(),
+           updated_at = now()
+       WHERE assigned_to = $1
+       AND archived_at IS NULL
+	`
+	_, err := tx.Exec(SQL, userID)
+	return err
 }

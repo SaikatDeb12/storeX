@@ -1,10 +1,9 @@
 package dbhelper
 
 import (
-	"errors"
-
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
+	"github.com/jmoiron/sqlx"
 )
 
 func CheckUserExistsByEmail(email string) (bool, error) {
@@ -152,21 +151,30 @@ func FetchUserByID(userID string) (models.UserInfoRequest, error) {
 
 func ValidateUserSession(sessionID string) error {
 	SQL := `
-		UPDATE user_sessions
-		SET archived_at=NOW()
+		SELECT COUNT(*) FROM user_sessions
 		WHERE id=$1 AND archived_at IS NULL
 	`
-	res, err := database.DB.Exec(SQL, sessionID)
-	rows, _ := res.RowsAffected()
-	if rows == 0 {
-		return errors.New("session not found")
-	}
+	err := database.DB.Get(SQL, sessionID)
 	return err
 }
 
-// func DeleteUserByID(userID string) error {
-	// if a user is deleted then, all the assets assigned to them will be "available"
-	// SQL := `
-	// 	UPDATE user
-	// `
+func DeleteUser(tx *sqlx.Tx, userID string) error {
+	SQL := `
+		UPDATE users
+		SET archived_at=NOW()
+		WHERE id=$1 AND archived_at IS NULL
+	`
+	_, err := tx.Exec(SQL, userID)
+	return err
+}
+
+func DeleteUserSession(tx *sqlx.Tx, userID string) error {
+	SQL := `
+		UPDATE user_sessions
+		SET archived_at=NOW()
+		WHERE user_id=$1 AND  archived_at IS NULL
+	`
+
+	_, err := tx.Exec(SQL, userID)
+	return err
 }

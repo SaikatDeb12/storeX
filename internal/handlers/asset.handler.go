@@ -104,7 +104,7 @@ func FetchAssets(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func AssignedAssets(w http.ResponseWriter, r *http.Request) {
+func AssignAssets(w http.ResponseWriter, r *http.Request) {
 	var req models.AssetAssignRequest
 
 	if parseErr := utils.ParseBody(r.Body, &req); parseErr != nil {
@@ -114,7 +114,7 @@ func AssignedAssets(w http.ResponseWriter, r *http.Request) {
 	userCtx, _ := middleware.UserContext(r)
 	currectUserID := userCtx.UserID
 
-	err := dbhelper.AssignedAssets(req.AssetID, currectUserID, req.UserID)
+	err := dbhelper.AssignAssets(req.AssetID, currectUserID, req.UserID)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err, "failed to assigned assets")
 		return

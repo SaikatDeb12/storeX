@@ -55,7 +55,7 @@ func Connect() error {
 	return migrateUp(DB)
 }
 
-func Tx(fn func(tx *sqlx.Tx) error) error {
+func Tx(fn func(tx *sqlx.Tx) error) (err error) {
 	tx, err := DB.Beginx()
 	if err != nil {
 		return fmt.Errorf("failed to start a transaction: %+v", err)
@@ -68,7 +68,7 @@ func Tx(fn func(tx *sqlx.Tx) error) error {
 			return
 		}
 		if commitErr := tx.Commit(); commitErr != nil {
-			fmt.Printf("failed to commit tx: %s", commitErr)
+			err = fmt.Errorf("failed to commit tx: %s", commitErr)
 		}
 	}()
 	err = fn(tx)
