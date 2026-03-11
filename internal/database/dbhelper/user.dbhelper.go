@@ -1,6 +1,8 @@
 package dbhelper
 
 import (
+	"errors"
+
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/jmoiron/sqlx"
@@ -21,21 +23,35 @@ func CheckUserExistsByEmail(email string) (bool, error) {
 	return count > 0, err
 }
 
-func CreateUser(name, email, phoneNumber, role, employment, hashedPassword string) (string, error) {
+func CreateUser(tx *sqlx.Tx, name, email, phoneNumber, role, employment, hashedPassword string) (string, error) {
 	SQL := `
 		INSERT INTO users(name, email, phone_number, role, employment, password)
 		VALUES($1, TRIM(LOWER($2)), $3, $4, $5, $6)
 		RETURNING id
 	`
 	var userID string
-	err := database.DB.Get(&userID, SQL, name, email, phoneNumber, role, employment, hashedPassword)
+	err := tx.Get(&userID, SQL, name, email, phoneNumber, role, employment, hashedPassword)
 	if err != nil {
 		return "", err
 	}
 	return string(userID), nil
 }
 
-func CreateSession(userID string) (string, error) {
+func CreateSessionOnRegister(tx *sqlx.Tx, userID string) (string, error) {
+	SQL := `
+		INSERT INTO user_sessions(user_id)
+		VALUES($1)
+		RETURNING id
+	`
+	var sessionID string
+	err := tx.Get(&sessionID, SQL, userID)
+	if err != nil {
+		return "", err
+	}
+	return string(sessionID), nil
+}
+
+func CreateSessionOnLogin(userID string) (string, error) {
 	SQL := `
 		INSERT INTO user_sessions(user_id)
 		VALUES($1)
@@ -63,18 +79,6 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
-func FetchAssetsInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
-	SQL := `
-		SELECT id, brand, model, status, asset_type
-		FROM assets
-		WHERE assigned_to_id=$1
-		AND ($2 = '' OR status::TEXT=$2)
-	`
-	assetDetails := make([]models.AssetInfoRequest, 0)
-	err := database.DB.Select(&assetDetails, SQL, userID, assetStatus)
-	return assetDetails, err
-}
-
 func FetchAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
 	SQL := `
 		SELECT id, brand, model, status, asset_type
@@ -93,6 +97,7 @@ func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRe
 		WHERE ($1 = '' OR name LIKE '%' || $1 || '%')
 		AND ($2 = '' OR role::TEXT=$2)
 		AND ($3 = '' OR employment::TEXT=$3)
+		AND archived_at IS NOT NULL
 	`
 	users := make([]models.UserInfoRequest, 0)
 	err := database.DB.Select(&users, SQL, name, role, employment)
@@ -107,16 +112,20 @@ func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRe
 		if err != nil {
 			return users, err
 		}
-
-		// If filtering by assetStatus and no matching assets found → skip user
-		if assetStatus != "available" && len(assetDetails) == 0 {
-			continue
+		if assetStatus == "available" {
+			if len(assetDetails) > 0 {
+				continue
+			} else {
+				if len(assetDetails) == 0 {
+					continue
+				}
+			}
 		}
 
 		user.AssetDetails = assetDetails
 		filteredUsers = append(filteredUsers, user)
 	}
-	return filteredUsers, err
+	return filteredUsers, nil
 
 	// change in the copy not the original
 	// for _, user := range users {
@@ -131,7 +140,7 @@ func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRe
 
 func FetchUserByID(userID string) (models.UserInfoRequest, error) {
 	SQL := `
-		SELECT name, email, phone_number, role, employment, created_at
+		SELECT id, name, email, phone_number, role, employment, created_at
 		FROM users
 		WHERE archived_at IS NULL AND id=$1
 	`
@@ -142,6 +151,9 @@ func FetchUserByID(userID string) (models.UserInfoRequest, error) {
 	}
 
 	assets, err := FetchAssetInfo(userID)
+	if err != nil {
+		return user, err
+	}
 	if len(assets) == 0 {
 		return user, nil
 	}
@@ -149,13 +161,36 @@ func FetchUserByID(userID string) (models.UserInfoRequest, error) {
 	return user, err
 }
 
-func ValidateUserSession(sessionID string) error {
+func ValidateUserSession(sessionID string) (bool, error) {
 	SQL := `
-		SELECT COUNT(*) FROM user_sessions
+		SELECT COUNT(*) 
+		FROM user_sessions
 		WHERE id=$1 AND archived_at IS NULL
 	`
-	err := database.DB.Get(SQL, sessionID)
-	return err
+	var count int
+	err := database.DB.Get(&count, SQL, sessionID)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func UpdateUserSession(sessionID string) error {
+	SQL := `
+		UPDATE user_sessions
+		SET archived_at=NOW()
+		WHERE id=$1 AND archived_at IS NULL
+	`
+	result, err := database.DB.Exec(SQL, sessionID)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("session not found")
+	}
+	return nil
 }
 
 func DeleteUser(tx *sqlx.Tx, userID string) error {
@@ -164,8 +199,16 @@ func DeleteUser(tx *sqlx.Tx, userID string) error {
 		SET archived_at=NOW()
 		WHERE id=$1 AND archived_at IS NULL
 	`
-	_, err := tx.Exec(SQL, userID)
-	return err
+	result, err := tx.Exec(SQL, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("session not found")
+	}
+	return nil
 }
 
 func DeleteUserSession(tx *sqlx.Tx, userID string) error {
@@ -175,6 +218,14 @@ func DeleteUserSession(tx *sqlx.Tx, userID string) error {
 		WHERE user_id=$1 AND  archived_at IS NULL
 	`
 
-	_, err := tx.Exec(SQL, userID)
-	return err
+	result, err := tx.Exec(SQL, userID)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("session not found")
+	}
+	return nil
 }

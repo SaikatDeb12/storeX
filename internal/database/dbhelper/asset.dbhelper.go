@@ -9,7 +9,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func InsertKeyboardDetails(assetID string, req models.KeyboardRequest) error {
+func InsertKeyboardDetails(tx *sqlx.Tx, assetID string, req models.KeyboardRequest) error {
 	SQL := `
 		INSERT INTO keyboards(asset_id, connectivity, layout)
 		VALUES($1, $2, $3)
@@ -21,11 +21,11 @@ func InsertKeyboardDetails(assetID string, req models.KeyboardRequest) error {
 		req.Layout,
 	}
 
-	_, err := database.DB.Exec(SQL, args...)
+	_, err := tx.Exec(SQL, args...)
 	return err
 }
 
-func InsertLaptopDetails(assetID string, req models.LaptopRequest) error {
+func InsertLaptopDetails(tx *sqlx.Tx, assetID string, req models.LaptopRequest) error {
 	SQL := `
 		INSERT INTO laptops(asset_id, processor, ram, storage, operating_system, charger, device_password)
 		VALUES($1, $2, $3, $4, $5, $6, $7)
@@ -41,11 +41,11 @@ func InsertLaptopDetails(assetID string, req models.LaptopRequest) error {
 		req.DevicePassword,
 	}
 
-	_, err := database.DB.Exec(SQL, args...)
+	_, err := tx.Exec(SQL, args...)
 	return err
 }
 
-func InsertMouseDetails(assetID string, req models.MouseRequest) error {
+func InsertMouseDetails(tx *sqlx.Tx, assetID string, req models.MouseRequest) error {
 	SQL := `
 		INSERT INTO mice(asset_id, dpi, connectivity)
 		VALUES($1, $2, $3)
@@ -57,11 +57,11 @@ func InsertMouseDetails(assetID string, req models.MouseRequest) error {
 		req.Connectivity,
 	}
 
-	_, err := database.DB.Exec(SQL, args...)
+	_, err := tx.Exec(SQL, args...)
 	return err
 }
 
-func InsertMobileDetails(assetID string, req models.MobileRequest) error {
+func InsertMobileDetails(tx *sqlx.Tx, assetID string, req models.MobileRequest) error {
 	SQL := `
 		INSERT INTO mobiles(asset_id, operating_system, ram, storage, charger, device_password)
 		VALUES($1, $2, $3, $4, $5, $6)
@@ -76,11 +76,11 @@ func InsertMobileDetails(assetID string, req models.MobileRequest) error {
 		req.DevicePassword,
 	}
 
-	_, err := database.DB.Exec(SQL, args...)
+	_, err := tx.Exec(SQL, args...)
 	return err
 }
 
-func CreateAsset(model models.CreateAssetRequest) (string, error) {
+func CreateAsset(tx *sqlx.Tx, model models.CreateAssetRequest) (string, error) {
 	SQL := `
 		INSERT INTO assets(brand, model, serial_number, asset_type, owner_type, warranty_start, warranty_end)
 		VALUES($1, $2, $3, $4, $5, $6, $7)
@@ -98,14 +98,14 @@ func CreateAsset(model models.CreateAssetRequest) (string, error) {
 	}
 
 	var assetID string
-	err := database.DB.Get(&assetID, SQL, args...)
+	err := tx.Get(&assetID, SQL, args...)
 	if err != nil {
 		return assetID, err
 	}
 	return assetID, nil
 }
 
-func FetchAssets(brand, model, assetType, serial_number, status, owner string, limit, offset int) ([]models.AssetAssignRequest, error) {
+func FetchAssets(brand, model, assetType, serial_number, status, owner string, limit, offset int) ([]models.AllAssetsInfoRequest, error) {
 	SQL := `SELECT id, brand, model, asset_type, serial_number, status, owner_type, assigned_by_id, assigned_to_id, assigned_at, warranty_start, warranty_end, service_start, service_end, returned_at, created_at, updated_at 
           FROM assets
           WHERE archived_at IS NULL 
@@ -130,9 +130,21 @@ func FetchAssets(brand, model, assetType, serial_number, status, owner string, l
           ORDER BY created_at
 		  LIMIT $7 OFFSET $8
           `
-	var result []models.AssetAssignRequest
+	var result []models.AllAssetsInfoRequest
 	err := database.DB.Select(&result, SQL, brand, model, assetType, serial_number, status, owner, limit, offset)
 	return result, err
+}
+
+func FetchAssetsInfo(userID, assetStatus string) ([]models.AssetInfoRequest, error) {
+	SQL := `
+		SELECT id, brand, model, status, asset_type
+		FROM assets
+		WHERE assigned_to_id=$1
+		AND ($2 = '' OR status::TEXT=$2)
+	`
+	assetDetails := make([]models.AssetInfoRequest, 0)
+	err := database.DB.Select(&assetDetails, SQL, userID, assetStatus)
+	return assetDetails, err
 }
 
 func GettingAssetsCount() (models.DashboardSummaryRequest, error) {
@@ -159,7 +171,7 @@ func AssignAssets(id, assignedById, assignedTo string) error {
               assigned_at=NOW(),
               status='assigned',
               updated_at=NOW()
-          WHERE id=$1
+          WHERE id=$1 and status='available'
           AND archived_at IS NULL 
               `
 	// _, err := database.DB.Exec(SQL, assignedById, assignedTo, id)
@@ -178,9 +190,13 @@ func UpdateAsset(tx *sqlx.Tx, assetID, brand, model, serialNo, assetType, owner 
 	query := `UPDATE assets
             set brand = $2, model = $3, serial_number = $4, asset_type=$5, owner_type=$6, warranty_start = $7,warranty_end=$8, updated_at =now()
             where id= $1 and archived_at is null `
-	_, err := tx.Exec(query, assetID, brand, model, serialNo, assetType, owner, warrantyStart, warrantyEnd)
+	result, err := tx.Exec(query, assetID, brand, model, serialNo, assetType, owner, warrantyStart, warrantyEnd)
 	if err != nil {
 		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("asset not found or already archived")
 	}
 	return nil
 }
@@ -265,9 +281,13 @@ func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) err
 func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 	query := `update assets set status='in_service',service_start=$2,service_end=$3,updated_at=now()
               where id=$1 and archived_at is NULL and status ='available'`
-	_, err := database.DB.Exec(query, assetId, serviceStart, serviceEnd)
+	result, err := database.DB.Exec(query, assetId, serviceStart, serviceEnd)
 	if err != nil {
 		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("asset not found or already archived")
 	}
 	return nil
 }
@@ -275,13 +295,13 @@ func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 func UnassignAssets(tx *sqlx.Tx, userID string) error {
 	SQL := `
 		UPDATE assets
-       SET assigned_to = NULL,
+       SET assigned_to_id = NULL,
            assigned_by_id = NULL,
-           assigned_on = NULL,
+           assigned_at = NULL,
            status = 'available',
-           returned_on = now(),
+           returned_at = now(),
            updated_at = now()
-       WHERE assigned_to = $1
+       WHERE assigned_to_id = $1
        AND archived_at IS NULL
 	`
 	_, err := tx.Exec(SQL, userID)

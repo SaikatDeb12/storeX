@@ -29,7 +29,7 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := database.Tx(func(tx *sqlx.Tx) error {
-		assetID, err := dbhelper.CreateAsset(req)
+		assetID, err := dbhelper.CreateAsset(tx, req)
 		if err != nil {
 			return err
 		}
@@ -37,13 +37,13 @@ func CreateAsset(w http.ResponseWriter, r *http.Request) {
 		assetType := req.Type
 		switch assetType {
 		case "laptop":
-			err = dbhelper.InsertLaptopDetails(assetID, *req.Laptop)
+			err = dbhelper.InsertLaptopDetails(tx, assetID, *req.Laptop)
 		case "keyboard":
-			err = dbhelper.InsertKeyboardDetails(assetID, *req.Keyboard)
+			err = dbhelper.InsertKeyboardDetails(tx, assetID, *req.Keyboard)
 		case "mouse":
-			err = dbhelper.InsertMouseDetails(assetID, *req.Mouse)
+			err = dbhelper.InsertMouseDetails(tx, assetID, *req.Mouse)
 		case "mobile":
-			err = dbhelper.InsertMobileDetails(assetID, *req.Mobile)
+			err = dbhelper.InsertMobileDetails(tx, assetID, *req.Mobile)
 		default:
 			err = errors.New("invalid asset type")
 		}
@@ -89,6 +89,7 @@ func FetchAssets(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	page = max(page, 1)
 	offset := (page - 1) * limit
 
 	allAssets, err := dbhelper.FetchAssets(brand, model, assetType, serialNumber, status, owner, limit, offset)
@@ -98,6 +99,11 @@ func FetchAssets(w http.ResponseWriter, r *http.Request) {
 	}
 
 	assetsCount, err := dbhelper.GettingAssetsCount()
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "failed to get asset count")
+		return
+	}
+
 	utils.RespondJSON(w, http.StatusOK, map[string]any{
 		"dashboard": assetsCount,
 		"assets":    allAssets,
@@ -116,7 +122,7 @@ func AssignAssets(w http.ResponseWriter, r *http.Request) {
 
 	err := dbhelper.AssignAssets(req.AssetID, currectUserID, req.UserID)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "failed to assigned assets")
+		utils.RespondError(w, http.StatusBadRequest, err, "failed to assign assets")
 		return
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
@@ -127,7 +133,7 @@ func AssignAssets(w http.ResponseWriter, r *http.Request) {
 func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 	assetId := chi.URLParam(r, "id")
 	if assetId == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid id")
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid asset id")
 		return
 	}
 	var req models.UpdateAssetRequest
