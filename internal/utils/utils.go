@@ -65,7 +65,7 @@ func RespondJSON(w http.ResponseWriter, statusCode int, body interface{}) {
 	}
 }
 
-func HashedPassword(password string) (string, error) {
+func HashPassword(password string) (string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		return "", err

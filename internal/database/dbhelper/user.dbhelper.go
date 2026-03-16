@@ -23,14 +23,14 @@ func CheckUserExistsByEmail(email string) (bool, error) {
 	return count > 0, err
 }
 
-func CreateUser(tx *sqlx.Tx, name, email, phoneNumber, role, employment, hashedPassword string) (string, error) {
+func CreateUser(tx *sqlx.Tx, name, email, phoneNumber, employment, hashedPassword string) (string, error) {
 	SQL := `
-		INSERT INTO users(name, email, phone_number, role, employment, password)
+		INSERT INTO users(name, email, phone_number, employment, password)
 		VALUES($1, TRIM(LOWER($2)), $3, $4, $5, $6)
 		RETURNING id
 	`
 	var userID string
-	err := tx.Get(&userID, SQL, name, email, phoneNumber, role, employment, hashedPassword)
+	err := tx.Get(&userID, SQL, name, email, phoneNumber, employment, hashedPassword)
 	if err != nil {
 		return "", err
 	}
@@ -77,6 +77,18 @@ func GetUserAuthByEmail(email string) (models.User, error) {
 		return user, err
 	}
 	return user, nil
+}
+
+func FetchUserRole(tx *sqlx.Tx, userID string) (string, error) {
+	SQL := `
+		SELECT role 
+		FROM users
+		WHERE id=$1 AND archived_at IS NULL
+	`
+
+	var role string
+	err := tx.Get(&role, SQL)
+	return role, err
 }
 
 func FetchAssetInfo(userID string) ([]models.AssetInfoRequest, error) {

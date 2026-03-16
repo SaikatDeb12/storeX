@@ -34,7 +34,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword, err := utils.HashedPassword(req.Password)
+	hashedPassword, err := utils.HashPassword(req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "password hashing failed")
 		return
@@ -42,7 +42,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	var token string
 	err = database.Tx(func(tx *sqlx.Tx) error {
-		userID, err := dbhelper.CreateUser(tx, req.Name, req.Email, req.PhoneNumber, req.Role, req.Employment, hashedPassword)
+		userID, err := dbhelper.CreateUser(tx, req.Name, req.Email, req.PhoneNumber, req.Employment, hashedPassword)
 		if err != nil {
 			utils.RespondError(w, http.StatusInternalServerError, err, "failed to create user")
 			return err
@@ -54,7 +54,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 
-		role := req.Role
+		role, err := dbhelper.FetchUserRole(tx, userID)
+		if err != nil {
+			return err
+		}
+
 		token, err = utils.GenerateJWT(userID, sessionID, role)
 
 		return err
