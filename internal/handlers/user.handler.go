@@ -5,6 +5,7 @@ import (
 
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
+	"github.com/SaikatDeb12/storeX/internal/models"
 	"github.com/SaikatDeb12/storeX/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
@@ -41,10 +42,35 @@ func GetUserInfoByID(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func AssignRole(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "id")
+	if userID == "" {
+		utils.RespondError(w, http.StatusBadRequest, nil, "user id not provided")
+		return
+	}
+
+	var req models.AssignRoleRequest
+	if err := utils.ParseBody(r.Body, &req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err, "invalid request body")
+		return
+	}
+
+	role := req.Role
+	err := dbhelper.AssignUserRole(userID, role)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err, "error while assigning role")
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "user role changed",
+	})
+}
+
 func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 	userID := chi.URLParam(r, "id")
 	if userID == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid user id")
+		utils.RespondError(w, http.StatusBadRequest, nil, "user id not provided")
 		return
 	}
 

@@ -13,7 +13,7 @@ func SetUpRouter() *chi.Mux {
 		v1.Get("/health", handler.CheckHealth)
 		v1.Route("/auth", func(r chi.Router) {
 			r.Post("/login", handler.Login)
-			r.Post("/Register", handler.Register)
+			r.Post("/register", handler.Register)
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.Authenticate)
 				r.Post("/logout", handler.Logout)
@@ -26,13 +26,17 @@ func SetUpRouter() *chi.Mux {
 				r.Get("/", handler.GetAllUsers)
 				r.Get("/{id}", handler.GetUserInfoByID)
 				r.Group(func(r chi.Router) {
-					r.Use(middleware.CheckUserRole)
+					r.Use(middleware.CheckUserRole("admin", "asset_manager"))
 					r.Delete("/{id}", handler.DeleteUserByID)
+				})
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.CheckUserRole("admin"))
+					r.Post("/assign-role/{id}", handler.AssignRole)
 				})
 			})
 			r.Route("/assets", func(r chi.Router) {
 				r.Group(func(r chi.Router) {
-					r.Use(middleware.CheckUserRole)
+					r.Use(middleware.CheckUserRole("admin", "asset_manager"))
 					r.Get("/", handler.FetchAssets)
 					r.Post("/", handler.CreateAsset)
 					r.Put("/update/{id}", handler.UpdateAsset)

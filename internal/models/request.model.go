@@ -20,6 +20,10 @@ type RequestContext struct {
 	Role      string `json:"role"`
 }
 
+type AssignRoleRequest struct {
+	Role string `json:"role" validate:"required,oneof=admin employee project_manager asset_manager employee_manager"`
+}
+
 type UserInfoRequest struct {
 	ID           string             `json:"id" db:"id"`
 	Name         string             `json:"name" db:"name" validate:"required,min=3,max=50"`

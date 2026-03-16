@@ -56,11 +56,11 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 		role, err := dbhelper.FetchUserRole(tx, userID)
 		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, err, "error fetching user role")
 			return err
 		}
 
 		token, err = utils.GenerateJWT(userID, sessionID, role)
-
 		return err
 	})
 	if err != nil {

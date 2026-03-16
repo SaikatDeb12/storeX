@@ -26,7 +26,7 @@ func CheckUserExistsByEmail(email string) (bool, error) {
 func CreateUser(tx *sqlx.Tx, name, email, phoneNumber, employment, hashedPassword string) (string, error) {
 	SQL := `
 		INSERT INTO users(name, email, phone_number, employment, password)
-		VALUES($1, TRIM(LOWER($2)), $3, $4, $5, $6)
+		VALUES($1, TRIM(LOWER($2)), $3, $4, $5)
 		RETURNING id
 	`
 	var userID string
@@ -67,7 +67,7 @@ func CreateSessionOnLogin(userID string) (string, error) {
 
 func GetUserAuthByEmail(email string) (models.User, error) {
 	SQL := `
-		SELECT id, email, password  
+		SELECT id, email, password, role
 		FROM users 
 		WHERE email=TRIM(LOWER($1)) AND archived_at IS NULL
 	`
@@ -87,8 +87,26 @@ func FetchUserRole(tx *sqlx.Tx, userID string) (string, error) {
 	`
 
 	var role string
-	err := tx.Get(&role, SQL)
+	err := tx.Get(&role, SQL, userID)
 	return role, err
+}
+
+func AssignUserRole(userID, role string) error {
+	SQL := `
+		UPDATE users
+		SET role=$2
+		WHERE id=$1 AND archived_at IS NOT NULL
+	`
+	result, err := database.DB.Exec(SQL, userID, role)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("no such user found")
+	}
+	return nil
 }
 
 func FetchAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
@@ -109,7 +127,7 @@ func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRe
 		WHERE ($1 = '' OR name LIKE '%' || $1 || '%')
 		AND ($2 = '' OR role::TEXT=$2)
 		AND ($3 = '' OR employment::TEXT=$3)
-		AND archived_at IS NOT NULL
+		AND archived_at IS NULL
 	`
 	users := make([]models.UserInfoRequest, 0)
 	err := database.DB.Select(&users, SQL, name, role, employment)

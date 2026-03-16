@@ -106,19 +106,22 @@ func Authenticate(next http.Handler) http.Handler {
 // 	})
 // }
 
-func CheckUserRole(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userCtx, ok := UserContext(r)
-		if !ok {
-			utils.RespondError(w, http.StatusUnauthorized, nil, "missing user context")
-			return
-		}
-		role := userCtx.Role
-
-		if role == "admin" || role == "asset_manager" {
-			next.ServeHTTP(w, r)
-			return
-		}
-		utils.RespondError(w, http.StatusUnauthorized, nil, "access denied")
-	})
+func CheckUserRole(Roles ...string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			userCtx, ok := UserContext(r)
+			if !ok {
+				utils.RespondError(w, http.StatusUnauthorized, nil, "missing user context")
+				return
+			}
+			userRole := userCtx.Role
+			for _, role := range Roles {
+				if userRole == role {
+					next.ServeHTTP(w, r)
+					return
+				}
+			}
+			utils.RespondError(w, http.StatusUnauthorized, nil, "access denied")
+		})
+	}
 }
