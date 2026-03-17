@@ -1,2 +1,3 @@
 .idea
 *.env
+config/firebase-adminsdk.json

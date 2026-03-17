@@ -97,17 +97,17 @@ func DeleteUserByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
-		err := dbhelper.DeleteUser(tx, userID)
-		if err != nil {
-			return err
-		}
-
-		err = dbhelper.UnassignAssets(tx, userID)
+		err := dbhelper.UnassignAssets(tx, userID)
 		if err != nil {
 			return err
 		}
 
 		err = dbhelper.DeleteUserSession(tx, userID)
+		if err != nil {
+			return err
+		}
+
+		err = dbhelper.DeleteUser(tx, userID)
 		if err != nil {
 			return err
 		}

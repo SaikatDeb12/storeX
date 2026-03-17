@@ -110,22 +110,22 @@ func FetchAssets(brand, model, assetType, serial_number, status, owner string, l
           FROM assets
           WHERE archived_at IS NULL 
           AND (
-              $1= '' or brand LIKE '%'||$1||'%'
+              $1= '' or brand ILIKE '%'||$1||'%'
           )
           AND(
-              $2 ='' or model LIKE '%'||$2||'%'
+              $2 ='' or model ILIKE '%'||$2||'%'
           )
           AND (
-              $3='' or asset_type::text LIKE '%'||$3||'%'
+              $3='' or asset_type::text ILIKE '%'||$3||'%'
           )
           AND(
-              $4 ='' or serial_number LIKE '%'||$4||'%'
+              $4 ='' or serial_number ILIKE '%'||$4||'%'
           )
           AND(
-              $5='' or status::text LIKE '%'||$5||'%'
+              $5='' or status::text ILIKE '%'||$5||'%'
           )
           AND(
-              $6=''or owner_type::text LIKE '%'||$6||'%'
+              $6=''or owner_type::text ILIKE '%'||$6||'%'
           )
           ORDER BY created_at
 		  LIMIT $7 OFFSET $8
@@ -309,7 +309,6 @@ func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) err
 	return err
 }
 
-// need to change the status, based on service... in_service, under_repair??
 func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 	SQL := `UPDATE assets
 			SET 

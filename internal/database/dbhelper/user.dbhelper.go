@@ -146,9 +146,10 @@ func FetchUsers(name, role, employment, assetStatus string, limit, offset int) (
 		AND ($3 = '' OR u.employment::TEXT = $3)
 		AND ($4 = '' OR a.status::TEXT = $4)
 		AND u.archived_at IS NULL
+	LIMIT $5 OFFSET $6
 	`
 	userAssetRows := make([]models.UserAssetRow, 0)
-	err := database.DB.Select(&userAssetRows, SQL, name, role, employment, assetStatus)
+	err := database.DB.Select(&userAssetRows, SQL, name, role, employment, assetStatus, limit, offset)
 	if err != nil {
 		return nil, err
 	}
