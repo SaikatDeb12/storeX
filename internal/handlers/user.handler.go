@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/SaikatDeb12/storeX/internal/database"
 	"github.com/SaikatDeb12/storeX/internal/database/dbhelper"
@@ -18,13 +19,34 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	employment := query.Get("employment")
 	assetStatus := query.Get("status")
 
-	userDetails, err := dbhelper.FetchUsers(name, role, employment, assetStatus)
+	limit := 10
+	page := 1
+	var err error
+
+	if limitInput := query.Get("limit"); limitInput != "" {
+		limit, err = strconv.Atoi(limitInput)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit input")
+		}
+	}
+
+	if pageInput := query.Get("page"); pageInput != "" {
+		page, err = strconv.Atoi(pageInput)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid page input")
+		}
+	}
+
+	page = max(page, 1)
+	offset := (page - 1) * limit
+
+	userDetails, err := dbhelper.FetchUsers(name, role, employment, assetStatus, limit, offset)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err, "failed to fetch users")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]any{
+	utils.RespondJSON(w, http.StatusOK, map[string][]models.UserInfoRequest{
 		"users": userDetails,
 	})
 }
@@ -37,7 +59,7 @@ func GetUserInfoByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]any{
+	utils.RespondJSON(w, http.StatusOK, map[string]models.UserInfoRequest{
 		"user": userDetails,
 	})
 }

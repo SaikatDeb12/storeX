@@ -129,7 +129,7 @@ func FetchAssets(brand, model, assetType, serial_number, status, owner string, l
           )
           ORDER BY created_at
 		  LIMIT $7 OFFSET $8
-          `
+    `
 	var result []models.AllAssetsInfoRequest
 	err := database.DB.Select(&result, SQL, brand, model, assetType, serial_number, status, owner, limit, offset)
 	return result, err
@@ -171,9 +171,9 @@ func AssignAssets(id, assignedById, assignedTo string) error {
               assigned_at=NOW(),
               status='assigned',
               updated_at=NOW()
-          WHERE id=$1 and status='available'
+          WHERE id=$1 AND status='available'
           AND archived_at IS NULL 
-              `
+	`
 	// _, err := database.DB.Exec(SQL, assignedById, assignedTo, id)
 	res, err := database.DB.Exec(SQL, id, assignedById, assignedTo)
 	if err != nil {
@@ -186,35 +186,66 @@ func AssignAssets(id, assignedById, assignedTo string) error {
 	return nil
 }
 
-func UpdateAsset(tx *sqlx.Tx, assetID, brand, model, serialNo, assetType, owner string, warrantyStart, warrantyEnd time.Time) error {
-	query := `UPDATE assets
-            set brand = $2, model = $3, serial_number = $4, asset_type=$5, owner_type=$6, warranty_start = $7,warranty_end=$8, updated_at =now()
-            where id= $1 and archived_at is null `
-	result, err := tx.Exec(query, assetID, brand, model, serialNo, assetType, owner, warrantyStart, warrantyEnd)
+func UpdateAsset(
+	tx *sqlx.Tx,
+	assetID string,
+	brand, model, serialNo, assetType, status, owner *string,
+	warrantyStart, warrantyEnd *time.Time,
+) error {
+	SQL := `
+	UPDATE assets
+	SET
+		brand = COALESCE($2, brand),
+		model = COALESCE($3, model),
+		serial_number = COALESCE($4, serial_number),
+		asset_type = COALESCE($5, asset_type),
+		status = COALESCE($6, status),
+		owner_type = COALESCE($7, owner_type),
+		warranty_start = COALESCE($8, warranty_start),
+		warranty_end = COALESCE($9, warranty_end),
+		updated_at = now()
+	WHERE id = $1
+	AND archived_at IS NULL
+	`
+
+	result, err := tx.Exec(SQL,
+		assetID,
+		brand,
+		model,
+		serialNo,
+		assetType,
+		status,
+		owner,
+		warrantyStart,
+		warrantyEnd,
+	)
 	if err != nil {
 		return err
 	}
+
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		return errors.New("asset not found or already archived")
+		return errors.New("asset not found or archived")
 	}
+
 	return nil
 }
 
 func UpdateLaptop(tx *sqlx.Tx, assetID string, laptop *models.LaptopRequest) error {
-	query := `
-    UPDATE laptops
-    SET
-        processor = $2,
-        ram = $3,
-        storage = $4,
-        operating_system = $5,
-        charger = $6,
-        device_password = $7
-    WHERE asset_id = $1
+	SQL := `
+		UPDATE laptops
+		SET
+			processor = $2,
+			ram = $3,
+			storage = $4,
+			operating_system = $5,
+			charger = $6,
+			device_password = $7
+		WHERE asset_id = $1
     `
 
-	_, err := tx.Exec(query,
+	_, err := tx.Exec(
+		SQL,
 		assetID,
 		laptop.Processor,
 		laptop.RAM,
@@ -228,45 +259,45 @@ func UpdateLaptop(tx *sqlx.Tx, assetID string, laptop *models.LaptopRequest) err
 }
 
 func UpdateMouse(tx *sqlx.Tx, assetID string, mouse *models.MouseRequest) error {
-	query := `
-    UPDATE mice
-    SET
-        dpi = $2,
-        connectivity = $3
-    WHERE asset_id = $1
+	SQL := `
+		UPDATE mice
+		SET
+			dpi = $2,
+			connectivity = $3
+		WHERE asset_id = $1
     `
 
-	_, err := tx.Exec(query, assetID, mouse.DPI, mouse.Connectivity)
+	_, err := tx.Exec(SQL, assetID, mouse.DPI, mouse.Connectivity)
 	return err
 }
 
 func UpdateKeyboard(tx *sqlx.Tx, assetID string, keyboard *models.KeyboardRequest) error {
-	query := `
-    UPDATE keyboards
-    SET
-        layout = $2,
-        connectivity = $3
-    WHERE asset_id = $1
+	SQL := `
+		UPDATE keyboards
+		SET
+			layout = $2,
+			connectivity = $3
+		WHERE asset_id = $1
     `
 
-	_, err := tx.Exec(query, assetID, keyboard.Layout, keyboard.Connectivity)
+	_, err := tx.Exec(SQL, assetID, keyboard.Layout, keyboard.Connectivity)
 	return err
 }
 
 func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) error {
-	query := `
-    UPDATE mobiles
-    SET
-        operating_system = $2,
-        ram = $3,
-        storage = $4,
-        charger = $5,
-        device_password = $6
-    WHERE asset_id = $1
+	SQL := `
+		UPDATE mobiles
+		SET
+			operating_system = $2,
+			ram = $3,
+			storage = $4,
+			charger = $5,
+			device_password = $6
+		WHERE asset_id = $1
     `
 
 	_, err := tx.Exec(
-		query,
+		SQL,
 		assetID,
 		mobile.OperatingSystem,
 		mobile.RAM,
@@ -278,10 +309,19 @@ func UpdateMobile(tx *sqlx.Tx, assetID string, mobile *models.MobileRequest) err
 	return err
 }
 
+// need to change the status, based on service... in_service, under_repair??
 func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
-	query := `update assets set status='in_service',service_start=$2,service_end=$3,updated_at=now()
-              where id=$1 and archived_at is NULL and status ='available'`
-	result, err := database.DB.Exec(query, assetId, serviceStart, serviceEnd)
+	SQL := `UPDATE assets
+			SET 
+				status='in_service', 
+				service_start=$2, 
+				service_end=$3, 
+				updated_at=now()
+			WHERE id=$1 
+			AND archived_at IS NULL 
+			AND status='available'
+	`
+	result, err := database.DB.Exec(SQL, assetId, serviceStart, serviceEnd)
 	if err != nil {
 		return err
 	}
@@ -295,14 +335,15 @@ func SentToService(assetId string, serviceStart, serviceEnd time.Time) error {
 func UnassignAssets(tx *sqlx.Tx, userID string) error {
 	SQL := `
 		UPDATE assets
-       SET assigned_to_id = NULL,
-           assigned_by_id = NULL,
-           assigned_at = NULL,
-           status = 'available',
-           returned_at = now(),
-           updated_at = now()
-       WHERE assigned_to_id = $1
-       AND archived_at IS NULL
+		SET 
+			assigned_to_id = NULL,
+			assigned_by_id = NULL,
+			assigned_at = NULL,
+			status = 'available',
+			returned_at = now(),
+			updated_at = NOW()
+		WHERE assigned_to_id = $1
+      	AND archived_at IS NULL
 	`
 	_, err := tx.Exec(SQL, userID)
 	return err

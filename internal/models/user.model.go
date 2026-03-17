@@ -4,6 +4,11 @@ import (
 	"time"
 )
 
+// type Role string
+//
+// const Admin Role = "admin"
+// const User Role = "user"
+
 type User struct {
 	ID          string     `json:"id" db:"id"`
 	Name        string     `json:"name" db:"name"`

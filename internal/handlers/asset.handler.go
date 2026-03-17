@@ -76,7 +76,7 @@ func FetchAssets(w http.ResponseWriter, r *http.Request) {
 	if limitInput := query.Get("limit"); limitInput != "" {
 		limit, err = strconv.Atoi(limitInput)
 		if err != nil {
-			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit")
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit input")
 			return
 		}
 	}
@@ -84,7 +84,7 @@ func FetchAssets(w http.ResponseWriter, r *http.Request) {
 	if pageInput := query.Get("page"); pageInput != "" {
 		page, err = strconv.Atoi(pageInput)
 		if err != nil {
-			utils.RespondError(w, http.StatusBadRequest, err, "invalid limit")
+			utils.RespondError(w, http.StatusBadRequest, err, "invalid page input")
 			return
 		}
 	}
@@ -118,9 +118,9 @@ func AssignAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	userCtx, _ := middleware.UserContext(r)
-	currectUserID := userCtx.UserID
+	currentUserID := userCtx.UserID
 
-	err := dbhelper.AssignAssets(req.AssetID, currectUserID, req.UserID)
+	err := dbhelper.AssignAssets(req.AssetID, currentUserID, req.UserID)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err, "failed to assign assets")
 		return
@@ -147,28 +147,38 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, validateErr, "fail to validate body")
 		return
 	}
-	warrantyStart, err := time.Parse(time.RFC3339, req.WarrantyStart)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyStart")
-		return
+	var warrantyStart *time.Time
+	var warrantyEnd *time.Time
+
+	if req.WarrantyStart != nil {
+		parseTime, err := time.Parse(time.RFC3339, *req.WarrantyStart)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyStart")
+			return
+		}
+		warrantyStart = &parseTime
 	}
 
-	warrantyEnd, err := time.Parse(time.RFC3339, req.WarrantyEnd)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyEnd")
-		return
+	if req.WarrantyEnd != nil {
+		parseTime, err := time.Parse(time.RFC3339, *req.WarrantyEnd)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, nil, "invalid warrantyEnd")
+			return
+		}
+		warrantyEnd = &parseTime
 	}
 
-	if warrantyEnd.Before(warrantyStart) {
+	if warrantyEnd.Before(*warrantyStart) {
 		utils.RespondError(w, http.StatusBadRequest, nil, "invalid warranty range")
 		return
 	}
+
 	txErr := database.Tx(func(tx *sqlx.Tx) error {
-		err := dbhelper.UpdateAsset(tx, assetId, req.Brand, req.Model, req.SerialNumber, req.Type, req.Owner, warrantyStart, warrantyEnd)
+		err := dbhelper.UpdateAsset(tx, assetId, req.Brand, req.Model, req.SerialNumber, req.Type, req.Status, req.Owner, warrantyStart, warrantyEnd)
 		if err != nil {
 			return err
 		}
-		switch req.Type {
+		switch *req.Type {
 
 		case "laptop":
 			if req.Laptop == nil {
@@ -208,14 +218,14 @@ func UpdateAsset(w http.ResponseWriter, r *http.Request) {
 func SentToService(w http.ResponseWriter, r *http.Request) {
 	assetId := chi.URLParam(r, "id")
 	if assetId == "" {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid id")
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid asset id")
 		return
 	}
 
 	var req models.SentServiceRequest
 	err := utils.ParseBody(r.Body, &req)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid request body")
 		return
 	}
 	err = utils.ValidateStruct(&req)
@@ -226,7 +236,7 @@ func SentToService(w http.ResponseWriter, r *http.Request) {
 
 	serviceStart, err := time.Parse(time.RFC3339, req.StartDate)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service date")
+		utils.RespondError(w, http.StatusBadRequest, nil, "invalid service start date")
 		return
 	}
 	serviceEnd, err := time.Parse(time.RFC3339, req.EndDate)

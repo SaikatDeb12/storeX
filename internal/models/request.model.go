@@ -35,6 +35,22 @@ type UserInfoRequest struct {
 	AssetDetails []AssetInfoRequest `json:"assetDetails"`
 }
 
+type UserAssetRow struct {
+	ID          string `db:"id"`
+	Name        string `db:"name"`
+	Email       string `db:"email"`
+	PhoneNumber string `db:"phone_number"`
+	Role        string `db:"role"`
+	Employment  string `db:"employment"`
+	CreatedAt   string `db:"created_at"`
+
+	AssetID   *string `db:"asset_id"`
+	Brand     *string `db:"brand"`
+	Model     *string `db:"model"`
+	Status    *string `db:"status"`
+	AssetType *string `db:"asset_type"`
+}
+
 type CreateAssetRequest struct {
 	Brand         string `json:"brand" db:"brand" validate:"required"`
 	Model         string `json:"model" db:"model" validate:"required"`
@@ -59,19 +75,20 @@ type AssetInfoRequest struct {
 }
 
 type UpdateAssetRequest struct {
-	Brand         string `json:"brand" db:"brand" validate:"required"`
-	Model         string `json:"model" db:"model" validate:"required"`
-	SerialNumber  string `json:"serialNumber" db:"serial_number" validate:"required"`
-	Type          string `json:"assetType" db:"asset_type" validate:"required,oneof=laptop keyboard mouse mobile"`
-	Status        string `json:"status" db:"status" validate:"required,oneof=available assigned in_service under_repair damaged"`
-	Owner         string `json:"owner" db:"owner_type" validate:"required,oneof=client remotestate"`
-	WarrantyStart string `json:"warrantyStart" db:"warranty_start" validate:"required"`
-	WarrantyEnd   string `json:"warrantyEnd" db:"warranty_end" validate:"required"`
+	Brand        *string `json:"brand" db:"brand"`
+	Model        *string `json:"model" db:"model"`
+	SerialNumber *string `json:"serialNumber" db:"serial_number"`
+	Type         *string `json:"assetType" db:"asset_type" validate:"omitempty,oneof=laptop keyboard mouse mobile"`
+	Status       *string `json:"status" db:"status" validate:"omitempty,oneof=available assigned in_service under_repair damaged"`
+	Owner        *string `json:"owner" db:"owner_type" validate:"omitempty,oneof=client remotestate"`
 
-	Laptop   *LaptopRequest   `validate:"required_if=assetType laptop"`
-	Keyboard *KeyboardRequest `validate:"required_if=assetType keyboard"`
-	Mouse    *MouseRequest    `validate:"required_if=assetType mouse"`
-	Mobile   *MobileRequest   `validate:"required_if=assetType mobile"`
+	WarrantyStart *string `json:"warrantyStart"`
+	WarrantyEnd   *string `json:"warrantyEnd"`
+
+	Laptop   *LaptopRequest
+	Keyboard *KeyboardRequest
+	Mouse    *MouseRequest
+	Mobile   *MobileRequest
 }
 
 type LaptopRequest struct {

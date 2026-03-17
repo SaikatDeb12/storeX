@@ -95,7 +95,7 @@ func AssignUserRole(userID, role string) error {
 	SQL := `
 		UPDATE users
 		SET role=$2
-		WHERE id=$1 AND archived_at IS NOT NULL
+		WHERE id=$1 AND archived_at IS NULL
 	`
 	result, err := database.DB.Exec(SQL, userID, role)
 	if err != nil {
@@ -104,69 +104,104 @@ func AssignUserRole(userID, role string) error {
 
 	rows, _ := result.RowsAffected()
 	if rows == 0 {
-		return errors.New("no such user found")
+		return errors.New("user not found")
 	}
 	return nil
 }
 
 func FetchAssetInfo(userID string) ([]models.AssetInfoRequest, error) {
 	SQL := `
-		SELECT id, brand, model, status, asset_type
-		FROM assets
-		WHERE archived_at IS NULL AND assigned_to_id=$1
+	SELECT id, brand, model, status, asset_type
+	FROM assets
+	WHERE assigned_to_id = $1
+	AND archived_at IS NULL
 	`
-	assetDetails := make([]models.AssetInfoRequest, 0)
-	err := database.DB.Select(&assetDetails, SQL, userID)
-	return assetDetails, err
+	assets := []models.AssetInfoRequest{}
+	err := database.DB.Select(&assets, SQL, userID)
+	return assets, err
 }
 
-func FetchUsers(name, role, employment, assetStatus string) ([]models.UserInfoRequest, error) {
+func FetchUsers(name, role, employment, assetStatus string, limit, offset int) ([]models.UserInfoRequest, error) {
 	SQL := `
-		SELECT id, name, email, phone_number, role, employment, created_at
-		FROM users
-		WHERE ($1 = '' OR name LIKE '%' || $1 || '%')
-		AND ($2 = '' OR role::TEXT=$2)
-		AND ($3 = '' OR employment::TEXT=$3)
-		AND archived_at IS NULL
+	SELECT 
+		u.id,
+		u.name,
+		u.email,
+		u.phone_number,
+		u.role,
+		u.employment,
+		u.created_at,
+		a.id AS asset_id,
+		a.brand,
+		a.model,
+		a.status,
+		a.asset_type
+	FROM users u
+	LEFT JOIN assets a
+		ON a.assigned_to_id = u.id
+		AND a.archived_at IS NULL
+	WHERE 
+		($1 = '' OR u.name ILIKE '%' || $1 || '%')
+		AND ($2 = '' OR u.role::TEXT = $2)
+		AND ($3 = '' OR u.employment::TEXT = $3)
+		AND ($4 = '' OR a.status::TEXT = $4)
+		AND u.archived_at IS NULL
 	`
-	users := make([]models.UserInfoRequest, 0)
-	err := database.DB.Select(&users, SQL, name, role, employment)
+	userAssetRows := make([]models.UserAssetRow, 0)
+	err := database.DB.Select(&userAssetRows, SQL, name, role, employment, assetStatus)
 	if err != nil {
-		return users, err
+		return nil, err
 	}
 
-	// to make change on the original slice:
-	filteredUsers := make([]models.UserInfoRequest, 0)
-	for _, user := range users {
-		assetDetails, err := FetchAssetsInfo(user.ID, assetStatus)
-		if err != nil {
-			return users, err
-		}
-		if assetStatus == "available" {
-			if len(assetDetails) > 0 {
-				continue
-			} else {
-				if len(assetDetails) == 0 {
-					continue
-				}
+	userMap := make(map[string]*models.UserInfoRequest)
+
+	for _, userAssetInfo := range userAssetRows {
+		if _, ok := userMap[userAssetInfo.ID]; !ok {
+			userMap[userAssetInfo.ID] = &models.UserInfoRequest{
+				ID:           userAssetInfo.ID,
+				Name:         userAssetInfo.Name,
+				Email:        userAssetInfo.Email,
+				PhoneNumber:  userAssetInfo.PhoneNumber,
+				Role:         userAssetInfo.Role,
+				Employment:   userAssetInfo.Employment,
+				CreatedAt:    userAssetInfo.CreatedAt,
+				AssetDetails: []models.AssetInfoRequest{},
 			}
 		}
-
-		user.AssetDetails = assetDetails
-		filteredUsers = append(filteredUsers, user)
+		if userAssetInfo.AssetID != nil {
+			asset := models.AssetInfoRequest{
+				ID:     *userAssetInfo.AssetID,
+				Brand:  *userAssetInfo.Brand,
+				Model:  *userAssetInfo.Model,
+				Status: *userAssetInfo.Status,
+				Type:   *userAssetInfo.AssetType,
+			}
+			userMap[userAssetInfo.ID].AssetDetails = append(userMap[userAssetInfo.ID].AssetDetails, asset)
+		}
 	}
-	return filteredUsers, nil
 
-	// change in the copy not the original
-	// for _, user := range users {
-	// 	userDetails, err := GetAssetInfo(user.ID)
-	// 	if err != nil {
-	// 		return users, err
-	// 	}
-	// 	fmt.Println(userDetails)
-	// 	user.AssetDetails = userDetails
-	// }
+	users := make([]models.UserInfoRequest, 0, len(userMap))
+	for _, user := range userMap {
+		users = append(users, *user)
+	}
+	return users, nil
 }
+
+// to make change on the original slice:
+// to either use join
+// or to use userID slice and assetID slice and then traverse and then put in the map
+// postgres any operator
+
+// change in the copy not the original
+// for _, user := range users {
+// 	userDetails, err := GetAssetInfo(user.ID)
+// 	if err != nil {
+// 		return users, err
+// 	}
+// 	fmt.Println(userDetails)
+// 	user.AssetDetails = userDetails
+// }
+// }
 
 func FetchUserByID(userID string) (models.UserInfoRequest, error) {
 	SQL := `

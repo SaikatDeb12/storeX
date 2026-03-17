@@ -25,7 +25,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	isEmailExists, err := dbhelper.CheckUserExistsByEmail(req.Email)
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err, "error while checking email exists or not")
+		utils.RespondError(w, http.StatusInternalServerError, err, "invalid credentials")
 		return
 	}
 
@@ -82,7 +82,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := utils.ValidateStruct(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err, "invalid payload")
+		utils.RespondError(w, http.StatusBadRequest, err, "payload validation error")
 		return
 	}
 
@@ -112,7 +112,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
-		"message": "login successfull",
+		"message": "login successful",
 		"token":   token,
 	})
 }
@@ -127,6 +127,12 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	sessionID := userContext.SessionID
 	isValidaUser, err := dbhelper.ValidateUserSession(sessionID)
 	if err != nil || !isValidaUser {
+		utils.RespondError(w, http.StatusForbidden, nil, "no active session found")
+		return
+	}
+
+	err = dbhelper.UpdateUserSession(sessionID)
+	if err != nil {
 		utils.RespondError(w, http.StatusForbidden, nil, "no active session found")
 		return
 	}

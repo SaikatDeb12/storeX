@@ -21,7 +21,7 @@ func main() {
 
 	err := database.Connect()
 	if err != nil {
-		log.Fatal("Error connecting to database\n", err)
+		log.Fatal("error connecting to database\n", err)
 	}
 
 	router := routes.SetUpRouter()
